@@ -2,104 +2,91 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW Coach AI - Version Stable</title>
+    <title>OW Coach AI - Direct Mode</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .card { max-width: 600px; margin: auto; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; box-sizing: border-box; }
-        input, select { background: #000; color: #fff; }
-        .btn { background: var(--ow-orange); color: white; font-weight: bold; cursor: pointer; border: none; font-size: 1.1em; transition: 0.3s; }
-        .btn:hover { background: #ff6b00; transform: translateY(-2px); }
-        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; margin: 15px 0; border-radius: 10px; cursor: pointer; background: rgba(64, 150, 238, 0.05); }
-        #ai-response { margin-top: 20px; padding: 15px; background: #111; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; color: #ddd; }
-        .status { text-align: center; font-size: 0.9em; color: var(--ow-blue); display: none; margin: 10px 0; }
+        .card { max-width: 600px; margin: auto; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; box-sizing: border-box; }
+        input { background: #000; color: #fff; }
+        .btn { background: var(--ow-orange); color: white; font-weight: bold; cursor: pointer; border: none; }
+        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; margin: 15px 0; border-radius: 10px; cursor: pointer; }
+        #ai-response { margin-top: 20px; padding: 15px; background: #111; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; line-height: 1.6; }
+        .loader { text-align: center; color: var(--ow-blue); display: none; margin: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="color:var(--ow-orange); margin: 0 0 20px 0; text-align: center;">OW COACH AI - PRODUCTION</h2>
-    
-    <label style="font-size: 0.8em; color: #888;">CLÉ API GEMINI</label>
-    <input type="password" id="apiKey" placeholder="Colle ta nouvelle clé ici...">
+    <h2 style="color:var(--ow-orange); text-align:center;">OW COACH AI (FIX 2026)</h2>
+    <input type="password" id="apiKey" placeholder="Colle ta clé API Gemini ici">
     
     <div id="drop-zone"><b>GLISSE TA VOD MP4 ICI</b></div>
     
-    <button class="btn" id="runBtn">🚀 LANCER L'ANALYSE</button>
-    <div id="loader" class="status">⏳ Envoi de la vidéo aux serveurs Google...</div>
+    <button class="btn" id="runBtn">🚀 ANALYSER LE GAMEPLAY</button>
+    <div id="loader" class="loader">⏳ ANALYSE EN COURS (Envoi direct)...</div>
     <div id="ai-response"></div>
 </div>
 
-<script type="module">
-    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
+<script>
     let videoBlob = null;
     const dz = document.getElementById('drop-zone');
-    const loader = document.getElementById('loader');
-    const responseBox = document.getElementById('ai-response');
 
     dz.ondragover = (e) => e.preventDefault();
     dz.ondrop = (e) => {
         e.preventDefault();
         videoBlob = e.dataTransfer.files[0];
-        dz.innerHTML = "✅ Fichier prêt : " + videoBlob.name;
-        dz.style.borderColor = "#fa9c1e";
+        dz.innerHTML = "✅ Vidéo prête : " + videoBlob.name;
     };
 
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value.trim();
-        if (!key || !videoBlob) return alert("Erreur : Clé ou vidéo manquante !");
+        if (!key || !videoBlob) return alert("Clé ou vidéo manquante !");
 
+        const loader = document.getElementById('loader');
+        const responseBox = document.getElementById('ai-response');
         loader.style.display = 'block';
         responseBox.style.display = 'none';
 
         try {
-            const genAI = new GoogleGenerativeAI(key);
-            
-            // On utilise gemini-1.5-flash-latest qui est le nom le plus stable
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
             const reader = new FileReader();
             reader.readAsDataURL(videoBlob);
             reader.onloadend = async () => {
                 const base64Data = reader.result.split(',')[1];
 
-                try {
-                    // Structure simplifiée pour éviter les erreurs de parsing API
-                    const result = await model.generateContent([
-                        {
-                            inlineData: {
-                                mimeType: "video/mp4",
-                                data: base64Data
-                            }
-                        },
-                        {
-                            text: "Tu es un coach Overwatch pro. Analyse cette action et donne tes conseils."
-                        }
-                    ]);
+                // URL DIRECTE DE L'API (On force la version stable v1beta)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
 
-                    const response = await result.response;
-                    const text = response.text();
-                    
-                    loader.style.display = 'none';
-                    responseBox.style.display = 'block';
-                    responseBox.innerText = text;
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: "Tu es un coach Overwatch Top 500. Analyse cette VOD et donne des conseils tactiques en français." },
+                            { inline_data: { mime_type: "video/mp4", data: base64Data } }
+                        ]
+                    }]
+                };
 
-                } catch (error) {
-                    loader.style.display = 'none';
-                    console.error("Détails de l'erreur:", error);
-                    
-                    if (error.message.includes("404")) {
-                        alert("ERREUR 404 : Le modèle n'est pas reconnu.\n\nCela arrive si Google n'a pas encore activé ta clé pour ce modèle. Attends 5 minutes ou vérifie que tu as créé la clé sur https://aistudio.google.com/");
-                    } else {
-                        alert("Erreur API : " + error.message);
-                    }
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
                 }
+
+                const aiText = data.candidates[0].content.parts[0].text;
+                loader.style.display = 'none';
+                responseBox.style.display = 'block';
+                responseBox.innerText = aiText;
             };
-        } catch (e) {
+        } catch (error) {
             loader.style.display = 'none';
-            alert("Erreur d'initialisation : " + e.message);
+            console.error(error);
+            alert("ERREUR : " + error.message);
         }
     };
 </script>
