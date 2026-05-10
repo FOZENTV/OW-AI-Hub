@@ -38,17 +38,80 @@ const HEROES_FLAT = Object.values(HEROES).flat();
 //  PROMPT
 // ─────────────────────────────────────────
 
+const RANK_CONTEXT = {
+  "Bronze":        "Le joueur a des lacunes fondamentales : mécanique de base, awareness minimal, décisions hasardeuses.",
+  "Argent":        "Le joueur comprend les bases mais manque de régularité et fait des erreurs d'habitude.",
+  "Or":            "Niveau correct mais mauvaises décisions de positioning et de timing.",
+  "Platine":       "Bon mécanisme mais manque d'impact, mauvais timing d'ulti.",
+  "Diamant":       "Solide mécaniquement, erreurs surtout sur le macro-jeu et la prise de risque.",
+  "Maître":        "Très bon niveau individuel, erreurs subtiles : resource management, cooldown tracking.",
+  "Grand Maître":  "Quasi-optimal. Analyse les micro-décisions et l'adaptation aux matchups.",
+  "Champion":      "Niveau élite. Analyse la position exacte, le timing, la lecture des ennemis.",
+  "Top 500":       "Niveau professionnel. Identifie uniquement les erreurs les plus subtiles.",
+};
+
+const HERO_CONTEXT = {
+  "Tracer":      "Flanker agressive. Analyser : gestion des recalls, blink usage, target prioritization, overextension.",
+  "Genji":       "Flanker. Analyser : dash reset, ulti combo, engagement/disengage, blade targets.",
+  "Widowmaker":  "Sniper. Analyser : angle selection, repositionnement après kill, headshots.",
+  "Reinhardt":   "Tank anchor. Analyser : shield management, fire strike, charge decisions, shatter setup.",
+  "Ana":         "Support sniper. Analyser : sleep dart sur ulti ennemis, nano boost timing, anti-heal.",
+  "Mercy":       "Support. Analyser : GA mobility, rez timing, damage boost vs heal, pistol usage.",
+  "Lucio":       "Support mobile. Analyser : speed vs heal switch, boop usage, sound barrier timing.",
+  "Zarya":       "Tank off. Analyser : bubble timing, energy management, combo ulti.",
+  "Moira":       "Support. Analyser : orb placement, fade usage, resource management, kill pressure.",
+  "Kiriko":      "Support. Analyser : suzu timing, kunai precision, teleport usage, ult timing.",
+  "Zenyatta":    "Support. Analyser : discord/harmony orb placement, positionnement safe, ulti defensif.",
+  "D.Va":        "Tank mobile. Analyser : boosters usage, defense matrix timing, bomb setup, remech timing.",
+  "Sigma":       "Tank. Analyser : flux timing, accretion precision, shield placement, ulti combo.",
+  "Winston":     "Tank dive. Analyser : leap targets, barrier placement, primal rage usage, dive timing.",
+};
+
 function buildPrompt(hero, rank) {
-  return `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
-Le joueur joue ${hero} en ranked ${rank}.
-Réponds UNIQUEMENT en JSON valide sans markdown ni backticks :
+  const rankTips = RANK_CONTEXT[rank] || "Analyse le gameplay de façon adaptée au niveau du joueur.";
+  const heroTips = HERO_CONTEXT[hero] || `Joue ${hero}. Analyse son kit : cooldowns, positionnement, gestion des ressources et impact sur le teamfight.`;
+
+  return `Tu es un coach Overwatch 2 professionnel.
+
+CONTEXTE :
+- Héros : ${hero} | Rang : ${rank}
+- Profil rang : ${rankTips}
+- Focus héros : ${heroTips}
+
+MISSION : Analyse cette VOD et fournis un coaching détaillé et actionnable.
+
+RÈGLES :
+- Explique POURQUOI c'est une erreur ou un bon play, pas juste QUOI
+- Donne un conseil CONCRET applicable dès la prochaine partie
+- Adapte la profondeur au rang ${rank}
+- Sois direct et honnête
+
+CATÉGORIES :
+- death : mort évitable (mauvais positioning, overextension)
+- mistake : erreur sans mort (ulti gaspillé, mauvaise cible)
+- positioning : problème de placement ou d'angle
+- ulti : gestion d'ulti bonne ou mauvaise
+- good : bon moment à reproduire
+
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 {
-  "summary": "résumé global 3-4 phrases",
-  "timestamps": [{"time":"MM:SS","category":"death|mistake|good|positioning|ulti","title":"...","description":"..."}],
-  "priorities": ["priorité 1","priorité 2","priorité 3"]
+  "summary": "Bilan global de 4-5 phrases : niveau général, points forts, axes d'amélioration",
+  "timestamps": [
+    {
+      "time": "MM:SS",
+      "category": "death|mistake|positioning|ulti|good",
+      "title": "Titre court du moment",
+      "description": "Ce qui s'est passé, pourquoi c'est bien/mal, conseil concret"
+    }
+  ],
+  "priorities": [
+    "Point #1 le plus important avec conseil concret",
+    "Point #2 avec conseil concret",
+    "Point #3 avec conseil concret"
+  ]
 }
-Identifie 6 à 10 moments clés. Sois précis et adapté au niveau ${rank} sur ${hero}.`;
-}
+
+Identifie 7 à 12 moments clés significatifs.`;
 
 // ─────────────────────────────────────────
 //  APP
