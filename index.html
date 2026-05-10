@@ -2,70 +2,59 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW Coach AI - Gemini 3 Pro</title>
+    <title>OW Coach AI - Gemini 3 Final</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #111; color: white; text-align: center; padding: 20px; }
-        .card { max-width: 500px; margin: auto; background: #222; padding: 30px; border-radius: 15px; border: 2px solid #fa9c1e; box-shadow: 0 0 20px rgba(250, 156, 30, 0.2); }
+        body { font-family: sans-serif; background: #111; color: white; text-align: center; padding: 20px; }
+        .card { max-width: 500px; margin: auto; background: #222; padding: 25px; border-radius: 12px; border: 2px solid #fa9c1e; }
         input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
-        input { background: #000; color: #fa9c1e; border: 1px solid #444; }
-        button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        #drop-zone { border: 2px dashed #4096ee; padding: 40px; margin: 15px 0; border-radius: 10px; cursor: pointer; background: rgba(0,0,0,0.4); }
-        #res { text-align: left; background: #000; padding: 20px; margin-top: 20px; border-radius: 8px; display: none; white-space: pre-wrap; line-height: 1.5; border-left: 5px solid #fa9c1e; }
-        .status-msg { color: #4096ee; display: none; font-weight: bold; margin: 10px; }
+        button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; }
+        #drop-zone { border: 2px dashed #4096ee; padding: 30px; margin: 15px 0; cursor: pointer; background: rgba(0,0,0,0.3); }
+        #res { text-align: left; background: #000; padding: 15px; margin-top: 20px; display: none; white-space: pre-wrap; border-left: 4px solid #fa9c1e; }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h2 style="color:#fa9c1e; margin-bottom: 5px;">OW COACH AI</h2>
-        <p style="margin-top: 0; font-size: 0.8em; color: #888;">Propulsé par Gemini 3 Flash Preview</p>
-        
-        <input type="password" id="key" placeholder="Ta clé API Gemini">
-        
-        <div id="drop-zone"><b>GLISSE TA VOD MP4 ICI</b></div>
-        
-        <button id="btn">🚀 ANALYSER LE GAMEPLAY</button>
-        <div id="status" class="status-msg">⏳ Gemini 3 analyse la vidéo... (Veuillez patienter)</div>
+        <h2 style="color:#fa9c1e;">OW COACH AI - V3</h2>
+        <input type="password" id="key" placeholder="Colle ta clé API Gemini 3 ici">
+        <div id="drop-zone">GLISSE TA VOD ICI (.MP4)</div>
+        <button id="btn">🚀 LANCER L'ANALYSE</button>
+        <p id="wait" style="display:none; color:#4096ee;">⏳ Analyse en cours par Gemini 3...</p>
         <div id="res"></div>
     </div>
 
 <script>
-    let videoFile = null;
+    let file = null;
     const dz = document.getElementById('drop-zone');
-
     dz.ondragover = (e) => e.preventDefault();
     dz.ondrop = (e) => {
         e.preventDefault();
-        videoFile = e.dataTransfer.files[0];
-        dz.innerHTML = "<b style='color:#fa9c1e;'>✅ Vidéo chargée :</b><br>" + videoFile.name;
+        file = e.dataTransfer.files[0];
+        dz.innerText = "✅ " + file.name;
     };
 
     document.getElementById('btn').onclick = async () => {
         const key = document.getElementById('key').value.trim();
-        if (!key || !videoFile) return alert("Il manque la clé ou le fichier vidéo !");
+        if (!key || !file) return alert("Clé ou vidéo manquante !");
 
-        const status = document.getElementById('status');
-        const resBox = document.getElementById('res');
-        
-        status.style.display = 'block';
-        resBox.style.display = 'none';
+        document.getElementById('wait').style.display = 'block';
+        document.getElementById('res').style.display = 'none';
 
         const reader = new FileReader();
-        reader.readAsDataURL(videoFile);
+        reader.readAsDataURL(file);
         reader.onloadend = async () => {
-            const base64Data = reader.result.split(',')[1];
-
-            // URL EXACTE POUR GEMINI 3 (Beta requise pour Preview)
+            const base64 = reader.result.split(',')[1];
+            
+            // On utilise v1beta pour le modèle Preview
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
 
             const payload = {
                 contents: [{
                     parts: [
-                        { text: "Tu es un coach professionnel d'Overwatch Top 500. Analyse ce clip et donne 3 points d'amélioration précis en français." },
+                        { text: "Tu es un coach Overwatch Top 500. Analyse ce gameplay et donne 3 conseils tactiques en français." },
                         { 
-                            inlineData: { 
-                                mimeType: "video/mp4", 
-                                data: base64Data 
+                            inlineData: { // Correction : 'inlineData' (CamelCase) et pas 'inline_data'
+                                mimeType: "video/mp4", // Correction : 'mimeType' et pas 'mime_type'
+                                data: base64 
                             } 
                         }
                     ]
@@ -80,20 +69,19 @@
                 });
 
                 const data = await response.json();
-                status.style.display = 'none';
+                document.getElementById('wait').style.display = 'none';
 
                 if (data.error) {
-                    resBox.innerHTML = "<b style='color:red;'>Erreur :</b> " + data.error.message;
+                    document.getElementById('res').innerText = "Erreur : " + data.error.message;
                 } else if (data.candidates && data.candidates[0].content) {
-                    resBox.innerText = data.candidates[0].content.parts[0].text;
+                    document.getElementById('res').innerText = data.candidates[0].content.parts[0].text;
                 } else {
-                    resBox.innerText = "Gemini n'a pas pu analyser cette vidéo. Vérifie que le clip n'est pas trop long.";
+                    document.getElementById('res').innerText = "Gemini 3 n'a pas pu répondre. Vérifie la durée du clip.";
                 }
-                resBox.style.display = 'block';
-
-            } catch (err) {
-                status.style.display = 'none';
-                alert("Erreur de connexion : " + err.message);
+                document.getElementById('res').style.display = 'block';
+            } catch (e) {
+                document.getElementById('wait').style.display = 'none';
+                alert("Erreur réseau : " + e.message);
             }
         };
     };
