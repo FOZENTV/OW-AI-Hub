@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Overwatch AI Agent</title>
+    <style>
+        :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
+        .api-section { background: #000; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.8em; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; background: #0b0c10; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        
+        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; }
+        video { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
+
+        .analyze-btn { 
+            background: var(--ow-orange); color: white; border: none; padding: 20px; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1em;
+        }
+        #ai-response { 
+            margin-top: 20px; padding: 20px; background: #12141d; border-left: 4px solid var(--ow-orange); 
+            display: none; white-space: pre-wrap; line-height: 1.6;
+        }
+        .loading { color: var(--ow-blue); font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="api-section">
+        <label>🔑 Gemini API Key</label>
+        <input type="password" id="apiKey" placeholder="Paste your AI Studio API key here...">
+        <p style="font-size: 0.7em; color: #666;">Your key is used locally and never stored.</p>
+    </div>
+
+    <div class="card">
+        <div class="grid">
+            <div>
+                <label>Hero</label>
+                <select id="hero">
+                    <optgroup label="🛡️ TANK (14)">
+                        <option>D.Va</option><option>Domina</option><option>Doomfist</option><option>Hazard</option><option>Junker Queen</option><option>Mauga</option><option>Orisa</option><option>Ramattra</option><option>Reinhardt</option><option>Roadhog</option><option>Sigma</option><option>Winston</option><option>Wrecking Ball</option><option>Zarya</option>
+                    </optgroup>
+                    <optgroup label="⚔️ DAMAGE (23)">
+                        <option>Anran</option><option>Ashe</option><option>Bastion</option><option>Cassidy</option><option>Echo</option><option>Emre</option><option>Freja</option><option>Genji</option><option>Hanzo</option><option>Junkrat</option><option>Mei</option><option>Pharah</option><option>Reaper</option><option>Sierra</option><option>Sojourn</option><option>Soldier: 76</option><option>Sombra</option><option>Symmetra</option><option>Torbjörn</option><option>Tracer</option><option>Vendetta</option><option>Venture</option><option>Widowmaker</option>
+                    </optgroup>
+                    <optgroup label="✚ SUPPORT (14)">
+                        <option>Ana</option><option>Baptiste</option><option>Brigitte</option><option>Illari</option><option>Jetpack Cat</option><option>Juno</option><option>Kiriko</option><option>Lifeweaver</option><option>Lúcio</option><option>Mercy</option><option>Mizuki</option><option>Moira</option><option>Wuyang</option><option>Zenyatta</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div><label>Rank</label><select id="rank"><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option><option>Champion</option><option>Top 500</option></select></div>
+        </div>
+
+        <div id="drop-zone">
+            <b>DRAG VOD HERE</b>
+            <video id="vPlayer" controls></video>
+        </div>
+
+        <textarea id="notes" rows="3" placeholder="What should I check? (Aim, positioning, cooldowns...)"></textarea>
+        
+        <button class="analyze-btn" id="runBtn" onclick="startAIAnalysis()">🚀 START AI ANALYSIS</button>
+        <div id="loader" class="loading">⏳ AI is watching your gameplay... please wait.</div>
+        <div id="ai-response"></div>
+    </div>
+</div>
+
+<script>
+    let videoBlob = null;
+
+    // Gestion du fichier
+    document.getElementById('drop-zone').ondragover = (e) => e.preventDefault();
+    document.getElementById('drop-zone').ondrop = (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            videoBlob = file;
+            document.getElementById('vPlayer').src = URL.createObjectURL(file);
+            document.getElementById('vPlayer').style.display = 'block';
+        }
+    };
+
+    async function startAIAnalysis() {
+        const key = document.getElementById('apiKey').value;
+        if(!key || !videoBlob) return alert("Missing API Key or Video!");
+
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('ai-response').style.display = 'none';
+
+        // Simulation de l'appel API (Gemini Flash 1.5 ou 2.0 supporte la vidéo)
+        // Note: L'implémentation réelle nécessite la bibliothèque Google Generative AI
+        try {
+            // Ici, on enverrait le blob à https://generativelanguage.googleapis.com/v1beta/...
+            // Pour l'instant, on prépare le terrain pour que tu puisses lier ton script
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('ai-response').style.display = 'block';
+                document.getElementById('ai-response').innerText = "AI FEEDBACK (Mock):\nYour Tracer tracking is 80% consistent. Focus on using Recall 1 second earlier when diving the backline. Your pulse bomb efficiency was 30% this match.";
+            }, 3000);
+        } catch (err) {
+            alert("API Error: " + err.message);
+        }
+    }
+</script>
+</body>
+</html>
