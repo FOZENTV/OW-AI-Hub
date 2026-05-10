@@ -1,364 +1,650 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OW VOD Analyzer</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500&display=swap');
-  :root{--bg:#0a0c10;--bg2:#0f1218;--bg3:#161b24;--border:#1e2530;--border2:#2a3342;--accent:#f5a623;--blue:#4a9eff;--green:#3ecf8e;--red:#ff4d6d;--purple:#a78bfa;--text:#e8edf5;--text2:#8b95a8;--text3:#4a5568}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
-  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:999}
-  .header{padding:18px 28px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:12px}
-  .logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent)}
-  .logo span{color:var(--text3);font-weight:500}
-  .badge{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);border-radius:3px;color:var(--text3)}
-  .layout{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:calc(100vh - 57px)}
-  .left{padding:24px 28px;border-right:1px solid var(--border);overflow-y:auto}
-  .right{padding:24px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
-  .section-title{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-  .api-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
-  .api-row label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text2);white-space:nowrap}
-  input[type=password],select{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:7px 11px;font-size:13px;color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s}
-  input[type=password]:focus,select:focus{border-color:var(--accent)}
-  input[type=password]::placeholder{color:var(--text3)}
-  select option,select optgroup{background:var(--bg3)}
-  .upload-zone{border:1.5px dashed var(--border2);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg2);margin-bottom:14px}
-  .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(245,166,35,0.04)}
-  .upload-zone.has{border-style:solid;border-color:var(--green);background:rgba(62,207,142,0.04)}
-  .upload-icon{font-size:28px;margin-bottom:8px;opacity:0.35}
-  .upload-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:4px}
-  .upload-sub{font-size:12px;color:var(--text2)}
-  .upload-info{font-size:12px;color:var(--green);margin-top:8px;font-weight:500}
-  .config-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-  .config-block{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
-  .analyze-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:7px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0a0c10;cursor:pointer;transition:all 0.2s;margin-bottom:16px}
-  .analyze-btn:hover:not(:disabled){background:#e8962a;transform:translateY(-1px)}
-  .analyze-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-  .prog-wrap{display:none;margin-bottom:16px}
-  .prog-wrap.on{display:block}
-  .prog-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px}
-  .prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));width:0%;transition:width 0.5s;border-radius:2px}
-  .prog-status{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
-  .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1s infinite;flex-shrink:0}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-  .err{background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.25);border-radius:7px;padding:10px 14px;font-size:13px;color:var(--red);display:none;margin-bottom:12px}
-  .err.on{display:block}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OW VOD Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
 
-  /* Video player */
-  .video-wrap{display:none;margin-bottom:14px}
-  .video-wrap.on{display:block}
-  .video-wrap video{width:100%;border-radius:8px;background:#000;border:1px solid var(--border)}
-  .video-controls{display:flex;gap:8px;margin-top:6px;align-items:center}
-  .video-time{font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;min-width:80px}
+    /* ─────────────────────────────────────────
+       DESIGN TOKENS
+    ───────────────────────────────────────── */
+    :root {
+      --bg:       #0a0c10;
+      --bg2:      #0f1218;
+      --bg3:      #161b24;
+      --border:   #1e2530;
+      --border2:  #2a3342;
+      --accent:   #f5a623;
+      --blue:     #4a9eff;
+      --green:    #3ecf8e;
+      --red:      #ff4d6d;
+      --purple:   #a78bfa;
+      --text:     #e8edf5;
+      --text2:    #8b95a8;
+      --text3:    #4a5568;
+      --font-display: 'Rajdhani', sans-serif;
+      --font-body:    'Inter', sans-serif;
+    }
 
-  /* Results */
-  .results{display:none}.results.on{display:block}
-  .results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .results-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
-  .reset-btn{padding:5px 12px;background:none;border:1px solid var(--border2);border-radius:5px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
-  .reset-btn:hover{border-color:var(--text2);color:var(--text)}
-  .summary-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:16px}
-  .summary-card h3{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
-  .summary-text{font-size:13px;line-height:1.75;color:var(--text2)}
-  .ts-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.2s}
-  .ts-item:hover{border-color:var(--border2)}
-  .ts-item.active{border-color:var(--accent)}
-  .ts-head{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
-  .ts-head:hover{background:rgba(255,255,255,0.02)}
-  .ts-time{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--accent);min-width:44px;letter-spacing:0.04em;cursor:pointer;transition:opacity 0.2s}
-  .ts-time:hover{opacity:0.7}
-  .ts-cat{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;flex-shrink:0}
-  .cat-death{background:rgba(255,77,109,0.12);color:var(--red);border:1px solid rgba(255,77,109,0.25)}
-  .cat-mistake{background:rgba(245,166,35,0.1);color:var(--accent);border:1px solid rgba(245,166,35,0.2)}
-  .cat-good{background:rgba(62,207,142,0.1);color:var(--green);border:1px solid rgba(62,207,142,0.2)}
-  .cat-positioning{background:rgba(74,158,255,0.1);color:var(--blue);border:1px solid rgba(74,158,255,0.2)}
-  .cat-ulti{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
-  .ts-title{font-size:13px;font-weight:500;flex:1;color:var(--text)}
-  .ts-chev{font-size:11px;color:var(--text3);flex-shrink:0}
-  .ts-body{padding:10px 14px;font-size:13px;line-height:1.7;color:var(--text2);border-top:1px solid var(--border);display:none}
-  .ts-body.open{display:block}
-  .ts-screenshot{margin-top:10px;border-radius:6px;overflow:hidden;border:1px solid var(--border2)}
-  .ts-screenshot img{width:100%;display:block;opacity:0.9;transition:opacity 0.2s}
-  .ts-screenshot img:hover{opacity:1}
-  .prio-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:14px 16px;margin-top:16px}
-  .prio-card h3{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
-  .prio-item{display:flex;gap:10px;margin-bottom:8px}
-  .prio-num{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text3);min-width:16px}
-  .prio-text{font-size:13px;line-height:1.65;color:var(--text2)}
-  input[type=file]{display:none}
-  a{color:var(--blue);font-size:12px}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  @media(max-width:768px){
-    .layout{grid-template-columns:1fr}
-    .left{border-right:none;border-bottom:1px solid var(--border)}
-  }
-</style>
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .logo span { color: var(--text3); font-weight: 500; }
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      color: var(--text3);
+    }
+
+    /* ── Layout ── */
+    .main { padding: 28px 32px; max-width: 900px; margin: 0 auto; }
+
+    /* ── Form elements ── */
+    input[type="password"], input[type="text"], select {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      padding: 7px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      font-family: var(--font-body);
+      transition: border-color 0.2s;
+    }
+    input[type="password"]:focus, input[type="text"]:focus, select:focus { border-color: var(--accent); }
+    input[type="password"]::placeholder { color: var(--text3); }
+    select option { background: var(--bg3); }
+    input[type="file"] { display: none; }
+
+    /* ── API Row ── */
+    .api-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+    .api-row label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text2);
+      white-space: nowrap;
+    }
+    .api-row a { color: var(--blue); font-size: 12px; text-decoration: none; }
+    .api-row a:hover { text-decoration: underline; }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 1.5px dashed var(--border2);
+      border-radius: 10px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg2);
+      margin-bottom: 20px;
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(245,166,35,0.04); }
+    .upload-zone.has-file { border-style: solid; border-color: var(--green); background: rgba(62,207,142,0.04); }
+    .upload-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.35; }
+    .upload-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .upload-sub { font-size: 12px; color: var(--text2); }
+    .upload-info { font-size: 13px; color: var(--green); margin-top: 10px; font-weight: 500; }
+
+    /* ── Config row ── */
+    .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .config-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; }
+    .config-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 7px;
+    }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(255,77,109,0.08);
+      border: 1px solid rgba(255,77,109,0.25);
+      border-radius: 7px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--red);
+      display: none;
+      margin-bottom: 14px;
+    }
+    .error-box.visible { display: block; }
+
+    /* ── Analyze button ── */
+    .analyze-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 7px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0a0c10;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      margin-bottom: 24px;
+    }
+    .analyze-btn:hover:not(:disabled) { background: #e8962a; transform: translateY(-1px); }
+    .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── Progress ── */
+    .progress-wrap { display: none; margin-bottom: 24px; }
+    .progress-wrap.visible { display: block; }
+    .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      width: 0%;
+      transition: width 0.5s;
+      border-radius: 2px;
+    }
+    .progress-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+    .blink-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Results ── */
+    .results { display: none; }
+    .results.visible { display: block; }
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .results-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .reset-btn {
+      padding: 6px 14px;
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .reset-btn:hover { border-color: var(--text2); color: var(--text); }
+
+    /* ── Summary ── */
+    .summary-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .summary-card h3 {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .summary-text { font-size: 13px; line-height: 1.75; color: var(--text2); }
+    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+
+    /* ── Timestamps ── */
+    .ts-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    .ts-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; }
+    .ts-head:hover { background: rgba(255,255,255,0.02); }
+    .ts-time { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--accent); min-width: 48px; letter-spacing: 0.04em; }
+    .ts-category { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; }
+    .cat-death       { background: rgba(255,77,109,0.12);  color: var(--red);    border: 1px solid rgba(255,77,109,0.25); }
+    .cat-mistake     { background: rgba(245,166,35,0.10);  color: var(--accent); border: 1px solid rgba(245,166,35,0.20); }
+    .cat-good        { background: rgba(62,207,142,0.10);  color: var(--green);  border: 1px solid rgba(62,207,142,0.20); }
+    .cat-positioning { background: rgba(74,158,255,0.10);  color: var(--blue);   border: 1px solid rgba(74,158,255,0.20); }
+    .cat-ulti        { background: rgba(167,139,250,0.10); color: var(--purple); border: 1px solid rgba(167,139,250,0.20); }
+    .ts-title { font-size: 13px; font-weight: 500; flex: 1; color: var(--text); }
+    .ts-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
+    .ts-body { padding: 12px 16px; font-size: 13px; line-height: 1.7; color: var(--text2); border-top: 1px solid var(--border); display: none; }
+    .ts-body.open { display: block; }
+
+    /* ── Priorities ── */
+    .priorities-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--blue);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-top: 20px;
+    }
+    .priorities-card h3 {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+    .priority-item { display: flex; gap: 10px; margin-bottom: 9px; }
+    .priority-num { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text3); min-width: 18px; }
+    .priority-text { font-size: 13px; line-height: 1.65; color: var(--text2); }
+
+  </style>
 </head>
 <body>
-<div class="header">
+
+<header class="header">
   <div class="logo">OW <span>/</span> VOD Analyzer</div>
-  <div class="badge">Gemini 2.5 Pro</div>
-</div>
+  <div class="badge">Client-side · Gemini</div>
+</header>
 
-<div class="layout">
-  <!-- LEFT : Upload + config -->
-  <div class="left">
-    <div class="api-row">
-      <label>API Gemini</label>
-      <input type="password" id="apiKey" placeholder="AIza..." style="flex:1">
-      <a href="https://aistudio.google.com/app/apikey" target="_blank">Clé ↗</a>
+<main class="main">
+
+  <div class="api-row">
+    <label for="apiKey">Clé API Gemini</label>
+    <input type="password" id="apiKey" placeholder="AIza..." style="flex:1">
+    <a href="https://aistudio.google.com/app/apikey" target="_blank">Obtenir une clé ↗</a>
+  </div>
+
+  <input type="file" id="fileInput" accept="video/*">
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-icon">🎬</div>
+    <div class="upload-title">Dépose ta VOD ici</div>
+    <div class="upload-sub">MP4, MOV — jusqu'à 2 Go</div>
+    <div class="upload-info" id="fileInfo"></div>
+  </div>
+
+  <div class="config-row">
+    <div class="config-block">
+      <div class="config-label">Personnage</div>
+      <select id="heroSelect" style="width:100%"></select>
     </div>
-
-    <input type="file" id="fileInput" accept="video/*">
-    <div class="upload-zone" id="uploadZone">
-      <div class="upload-icon">🎬</div>
-      <div class="upload-title">Dépose ta VOD ici</div>
-      <div class="upload-sub">MP4, MOV — jusqu'à 2 Go</div>
-      <div class="upload-info" id="fileInfo"></div>
-    </div>
-
-    <!-- Video player -->
-    <div class="video-wrap" id="videoWrap">
-      <video id="videoPlayer" controls></video>
-    </div>
-
-    <div class="config-row">
-      <div class="config-block">
-        <div class="section-title">Personnage</div>
-        <select id="heroSelect" style="width:100%"></select>
-      </div>
-      <div class="config-block">
-        <div class="section-title">Rank</div>
-        <select id="rankSelect" style="width:100%">
-          <option>Bronze</option><option>Argent</option><option>Or</option>
-          <option>Platine</option><option selected>Diamant</option>
-          <option>Maître</option><option>Grand Maître</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="err" id="errBox"></div>
-    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ Analyser la VOD</button>
-
-    <div class="prog-wrap" id="progWrap">
-      <div class="prog-bg"><div class="prog-bar" id="progBar"></div></div>
-      <div class="prog-status"><div class="dot"></div><span id="progStatus">Chargement...</span></div>
+    <div class="config-block">
+      <div class="config-label">Rank</div>
+      <select id="rankSelect" style="width:100%"></select>
     </div>
   </div>
 
-  <!-- RIGHT : Results -->
-  <div class="right">
-    <div class="results" id="results">
-      <div class="results-header">
-        <div class="results-title">Rapport de coaching</div>
-        <button class="reset-btn" onclick="resetAll()">Nouvelle analyse</button>
-      </div>
-      <div class="summary-card">
-        <h3>Résumé global</h3>
-        <div class="summary-text" id="summaryText"></div>
-      </div>
-      <div class="section-title">Moments clés</div>
-      <div id="tsList"></div>
-      <div class="prio-card">
-        <h3>Priorités à travailler</h3>
-        <div id="prioList"></div>
-      </div>
+  <div class="error-box" id="errorBox"></div>
+  <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ Analyser la VOD</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar"></div>
     </div>
-    <div id="emptyState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);text-align:center;gap:10px">
-      <div style="font-size:40px;opacity:0.2">📋</div>
-      <div style="font-size:13px">L'analyse apparaîtra ici</div>
+    <div class="progress-status">
+      <div class="blink-dot"></div>
+      <span id="progressStatus">Chargement...</span>
     </div>
   </div>
-</div>
+
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="results-title">Rapport de coaching</div>
+      <button class="reset-btn" onclick="resetForm()">Nouvelle analyse</button>
+    </div>
+    <div class="summary-card">
+      <h3>Résumé global</h3>
+      <div class="summary-text" id="summaryText"></div>
+    </div>
+    <div class="section-label">Moments clés</div>
+    <div id="timestampList"></div>
+    <div class="priorities-card">
+      <h3>Priorités à travailler</h3>
+      <div id="priorityList"></div>
+    </div>
+  </div>
+
+</main>
 
 <script>
-const SERVER_URL = "https://ow-vod-analyzer.onrender.com";
-let file = null;
-let videoObjectUrl = null;
 
-// ── HEROES ──────────────────────────────────────────────────────────────────
-async function loadHeroes() {
-  try {
-    const res = await fetch(SERVER_URL + "/heroes");
-    const data = await res.json();
-    const sel = document.getElementById('heroSelect');
-    // data est un objet {Tank:[...], Damage:[...], Support:[...]}
-    const order = ["Tank", "Damage", "Support"];
-    order.forEach(role => {
-      if (!data[role]) return;
-      const grp = document.createElement('optgroup');
-      grp.label = role;
-      data[role].forEach(h => {
-        const o = document.createElement('option');
-        o.value = h; o.textContent = h;
-        if (h === 'Tracer') o.selected = true;
-        grp.appendChild(o);
-      });
-      sel.appendChild(grp);
+  /* ─────────────────────────────────────────
+     CONFIG
+  ───────────────────────────────────────── */
+
+  const GEMINI_MODEL = 'gemini-2.5-flash'; // Modèle à changer ici si besoin
+
+  const RANKS = [
+    'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
+    'Maître', 'Grand Maître', 'Champion', 'Top 500',
+  ];
+  const DEFAULT_RANK = 'Diamant';
+  const DEFAULT_HERO = 'Tracer';
+
+  // Pour ajouter une catégorie : ajouter ici + règle CSS .cat-xxx
+  const CATEGORIES = {
+    death:       { label: 'Mort',       cssClass: 'cat-death' },
+    mistake:     { label: 'Erreur',     cssClass: 'cat-mistake' },
+    good:        { label: 'Bon moment', cssClass: 'cat-good' },
+    positioning: { label: 'Position',   cssClass: 'cat-positioning' },
+    ulti:        { label: 'Ulti',       cssClass: 'cat-ulti' },
+  };
+
+  // Pour ajouter un héros : ajouter dans la bonne liste
+  const HEROES = {
+    Tank: [
+      'D.Va', 'Domina', 'Doomfist', 'Hazard', 'Junker Queen', 'Mauga',
+      'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston',
+      'Wrecking Ball', 'Zarya',
+    ],
+    Damage: [
+      'Anran', 'Ashe', 'Bastion', 'Cassidy', 'Echo', 'Emre', 'Freja',
+      'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Sierra',
+      'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn',
+      'Tracer', 'Vendetta', 'Venture', 'Widowmaker',
+    ],
+    Support: [
+      'Ana', 'Baptiste', 'Brigitte', 'Illari', 'Jetpack Cat', 'Juno',
+      'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Mizuki', 'Moira',
+      'Wuyang', 'Zenyatta',
+    ],
+  };
+
+  const HEROES_FLAT = Object.values(HEROES).flat();
+
+  /* ─────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────── */
+
+  function initSelects() {
+    const rankSel = document.getElementById('rankSelect');
+    RANKS.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r; o.textContent = r;
+      if (r === DEFAULT_RANK) o.selected = true;
+      rankSel.appendChild(o);
     });
-  } catch(e) {
-    // Fallback liste basique
-    const sel = document.getElementById('heroSelect');
-    ["Tracer","Genji","Ana","Reinhardt","D.Va","Mercy"].forEach(h => {
+
+    const heroSel = document.getElementById('heroSelect');
+    HEROES_FLAT.forEach(h => {
       const o = document.createElement('option');
       o.value = h; o.textContent = h;
-      sel.appendChild(o);
+      if (h === DEFAULT_HERO) o.selected = true;
+      heroSel.appendChild(o);
     });
   }
-}
 
-loadHeroes();
+  initSelects();
 
-// ── UPLOAD ZONE ──────────────────────────────────────────────────────────────
-const zone = document.getElementById('uploadZone'), fi = document.getElementById('fileInput');
-zone.addEventListener('click', () => fi.click());
-fi.addEventListener('change', e => setFile(e.target.files[0]));
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-zone.addEventListener('drop', e => {
-  e.preventDefault(); zone.classList.remove('drag');
-  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-});
+  /* ─────────────────────────────────────────
+     UPLOAD ZONE
+  ───────────────────────────────────────── */
 
-function setFile(f) {
-  file = f;
-  document.getElementById('fileInfo').textContent = '✓ ' + f.name + ' — ' + (f.size/1024/1024).toFixed(0) + ' Mo';
-  zone.classList.add('has');
-  // Afficher le player vidéo
-  if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
-  videoObjectUrl = URL.createObjectURL(f);
-  const player = document.getElementById('videoPlayer');
-  player.src = videoObjectUrl;
-  document.getElementById('videoWrap').classList.add('on');
-}
+  let selectedFile = null;
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput  = document.getElementById('fileInput');
 
-// ── VIDEO NAVIGATION ─────────────────────────────────────────────────────────
-function seekTo(timeStr) {
-  const player = document.getElementById('videoPlayer');
-  if (!player.src) return;
-  const parts = timeStr.split(":").map(Number);
-  const secs = parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0];
-  player.currentTime = secs;
-  player.play().catch(() => {});
-  // Scroll vers le player
-  document.getElementById('videoWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
 
-// ── UI HELPERS ────────────────────────────────────────────────────────────────
-function setProgress(pct, txt) {
-  document.getElementById('progBar').style.width = pct + '%';
-  document.getElementById('progStatus').textContent = txt;
-}
-function showErr(msg) { const b = document.getElementById('errBox'); b.textContent = msg; b.classList.add('on'); }
-function hideErr() { document.getElementById('errBox').classList.remove('on'); }
+  function setFile(file) {
+    selectedFile = file;
+    const mb = (file.size / 1024 / 1024).toFixed(0);
+    document.getElementById('fileInfo').textContent = `✓ ${file.name} — ${mb} Mo`;
+    uploadZone.classList.add('has-file');
+  }
 
-function resetAll() {
-  file = null; fi.value = '';
-  document.getElementById('fileInfo').textContent = '';
-  zone.classList.remove('has');
-  document.getElementById('videoWrap').classList.remove('on');
-  document.getElementById('videoPlayer').src = '';
-  if (videoObjectUrl) { URL.revokeObjectURL(videoObjectUrl); videoObjectUrl = null; }
-  document.getElementById('results').classList.remove('on');
-  document.getElementById('emptyState').style.display = 'flex';
-  document.getElementById('progWrap').classList.remove('on');
-  hideErr();
-}
+  /* ─────────────────────────────────────────
+     UI HELPERS
+  ───────────────────────────────────────── */
 
-// ── ANALYZE ──────────────────────────────────────────────────────────────────
-async function analyze() {
-  hideErr();
-  const key  = document.getElementById('apiKey').value.trim();
-  const hero = document.getElementById('heroSelect').value;
-  const rank = document.getElementById('rankSelect').value;
-  if (!key)  { showErr('Entre ta clé API Gemini.'); return; }
-  if (!file) { showErr('Sélectionne une VOD.'); return; }
+  function setProgress(pct, text) {
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressStatus').textContent = text;
+  }
+  function showError(msg) {
+    const b = document.getElementById('errorBox');
+    b.textContent = msg; b.classList.add('visible');
+  }
+  function hideError() { document.getElementById('errorBox').classList.remove('visible'); }
+  function showProgress() { document.getElementById('progressWrap').classList.add('visible'); }
+  function hideProgress() { document.getElementById('progressWrap').classList.remove('visible'); }
+  function showResults() { document.getElementById('results').classList.add('visible'); }
+  function hideResults() { document.getElementById('results').classList.remove('visible'); }
 
-  const btn = document.getElementById('analyzeBtn');
-  btn.disabled = true;
-  document.getElementById('progWrap').classList.add('on');
-  document.getElementById('results').classList.remove('on');
-  document.getElementById('emptyState').style.display = 'none';
+  function resetForm() {
+    selectedFile = null;
+    fileInput.value = '';
+    document.getElementById('fileInfo').textContent = '';
+    uploadZone.classList.remove('has-file');
+    hideResults(); hideProgress(); hideError();
+  }
 
-  try {
-    setProgress(10, 'Envoi de la vidéo au serveur...');
-    const form = new FormData();
-    form.append('api_key', key);
-    form.append('hero', hero);
-    form.append('rank', rank);
-    form.append('video', file);
+  /* ─────────────────────────────────────────
+     GEMINI FILES API — upload direct depuis le navigateur
+  ───────────────────────────────────────── */
 
-    setProgress(20, 'Upload vers Gemini... (peut prendre quelques minutes)');
+  const BASE = 'https://generativelanguage.googleapis.com';
 
-    // Simuler progression pendant l'attente
-    let prog = 20;
-    const progInterval = setInterval(() => {
-      if (prog < 85) { prog += 1; setProgress(prog, 'Analyse IA en cours...'); }
-    }, 4000);
+  async function uploadToGemini(apiKey, file) {
+    setProgress(30, `Upload en cours… (${(file.size/1024/1024).toFixed(0)} Mo)`);
 
-    const res = await fetch(SERVER_URL + "/analyze", { method: 'POST', body: form });
-    clearInterval(progInterval);
+    // Upload multipart — pas de headers custom, compatible CORS navigateur
+    const metadata = JSON.stringify({ file: { display_name: file.name } });
+    const body = new FormData();
+    body.append('metadata', new Blob([metadata], { type: 'application/json' }));
+    body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }));
+
+    const res = await fetch(
+      `${BASE}/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,
+      { method: 'POST', body }
+    );
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'Erreur upload : ' + res.status);
+    }
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    return data.file; // { name, uri, state, ... }
+  }
 
-    setProgress(100, 'Analyse terminée !');
-    setTimeout(() => document.getElementById('progWrap').classList.remove('on'), 1000);
-    render(data);
+  async function waitForActive(apiKey, fileName) {
+    setProgress(55, 'Traitement de la vidéo par Gemini…');
+    for (let i = 0; i < 30; i++) {
+      const res  = await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`);
+      const data = await res.json();
+      if (data.state === 'ACTIVE') return data;
+      if (data.state === 'FAILED') throw new Error('Traitement vidéo échoué côté Gemini');
+      await new Promise(r => setTimeout(r, 3000));
+    }
+    throw new Error('Timeout — la vidéo met trop longtemps à traiter');
+  }
 
-  } catch(err) {
-    showErr('Erreur : ' + err.message);
-    document.getElementById('progWrap').classList.remove('on');
-    document.getElementById('emptyState').style.display = 'flex';
-  } finally { btn.disabled = false; }
+  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
+    setProgress(75, 'Analyse IA en cours…');
+
+    const prompt = `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
+
+Le joueur joue ${hero} en ranked ${rank}.
+
+Réponds UNIQUEMENT en JSON valide sans markdown ni backticks, avec cette structure :
+{
+  "summary": "résumé global du gameplay en 3-4 phrases, points forts et points faibles",
+  "timestamps": [
+    {
+      "time": "MM:SS",
+      "category": "death|mistake|good|positioning|ulti",
+      "title": "titre court du moment",
+      "description": "analyse détaillée de ce moment et conseil concret adapté au niveau ${rank}"
+    }
+  ],
+  "priorities": ["priorité 1 à travailler", "priorité 2", "priorité 3"]
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function catCls(c) {
-  return {death:'cat-death',mistake:'cat-mistake',good:'cat-good',positioning:'cat-positioning',ulti:'cat-ulti'}[c] || 'cat-ulti';
-}
-function catLbl(c) {
-  return {death:'💀 Mort',mistake:'⚠ Erreur',good:'✓ Bon moment',positioning:'📍 Position',ulti:'⚡ Ulti'}[c] || c;
-}
+Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au niveau ${rank} sur ${hero}.`;
 
-function toggleTs(i) {
-  const b = document.getElementById('tsb-' + i);
-  const c = document.getElementById('tsc-' + i);
-  const open = b.classList.toggle('open');
-  c.textContent = open ? '▲' : '▼';
-  // Highlight item actif
-  document.querySelectorAll('.ts-item').forEach(el => el.classList.remove('active'));
-  if (open) document.getElementById('tsi-' + i).classList.add('active');
-}
+    const res = await fetch(
+      `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { file_data: { file_uri: fileUri, mime_type: fileMime } },
+              { text: prompt },
+            ],
+          }],
+        }),
+      }
+    );
 
-function render(data) {
-  document.getElementById('summaryText').textContent = data.summary || '';
-  document.getElementById('emptyState').style.display = 'none';
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
 
-  document.getElementById('tsList').innerHTML = (data.timestamps || []).map((ts, i) => `
-    <div class="ts-item" id="tsi-${i}">
-      <div class="ts-head" onclick="toggleTs(${i})">
-        <div class="ts-time" onclick="event.stopPropagation();seekTo('${ts.time}')" title="Aller à ce moment dans la vidéo">${ts.time}</div>
-        <div class="ts-cat ${catCls(ts.category)}">${catLbl(ts.category)}</div>
-        <div class="ts-title">${ts.title}</div>
-        <div class="ts-chev" id="tsc-${i}">▼</div>
-      </div>
-      <div class="ts-body" id="tsb-${i}">
-        ${ts.description}
-        ${ts.screenshot ? `<div class="ts-screenshot"><img src="${ts.screenshot}" alt="Screenshot ${ts.time}" loading="lazy" onclick="seekTo('${ts.time}')"></div>` : ''}
-      </div>
-    </div>`).join('');
+    const raw = data.candidates[0].content.parts[0].text
+      .replace(/```json|```/g, '').trim();
+    return JSON.parse(raw);
+  }
 
-  document.getElementById('prioList').innerHTML = (data.priorities || []).map((p, i) => `
-    <div class="prio-item">
-      <div class="prio-num">${i + 1}.</div>
-      <div class="prio-text">${p}</div>
-    </div>`).join('');
+  async function deleteFile(apiKey, fileName) {
+    try {
+      await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`, { method: 'DELETE' });
+    } catch {}
+  }
 
-  document.getElementById('results').classList.add('on');
-}
+  /* ─────────────────────────────────────────
+     ANALYZE — action principale
+  ───────────────────────────────────────── */
+
+  async function analyze() {
+    hideError();
+
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const hero   = document.getElementById('heroSelect').value;
+    const rank   = document.getElementById('rankSelect').value;
+
+    if (!apiKey)       return showError('Entre ta clé API Gemini.');
+    if (!selectedFile) return showError('Sélectionne une VOD.');
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    showProgress();
+    hideResults();
+
+    let uploadedFileName = null;
+
+    try {
+      setProgress(10, 'Connexion à Gemini…');
+
+      const fileInfo = await uploadToGemini(apiKey, selectedFile);
+      uploadedFileName = fileInfo.name;
+
+      const activeFile = await waitForActive(apiKey, fileInfo.name);
+      const parsed = await generateAnalysis(apiKey, activeFile.uri, selectedFile.type, hero, rank);
+
+      setProgress(100, 'Analyse terminée !');
+      renderResults(parsed);
+
+    } catch (err) {
+      showError('Erreur : ' + err.message);
+      hideProgress();
+    } finally {
+      btn.disabled = false;
+      if (uploadedFileName) deleteFile(apiKey, uploadedFileName);
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     RENDER RESULTS
+  ───────────────────────────────────────── */
+
+  function renderResults(data) {
+    document.getElementById('summaryText').textContent = data.summary || '';
+    renderTimestamps(data.timestamps || []);
+    renderPriorities(data.priorities || []);
+    hideProgress();
+    showResults();
+  }
+
+  function renderTimestamps(timestamps) {
+    document.getElementById('timestampList').innerHTML = timestamps.map((ts, i) => {
+      const cat = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
+      return `
+        <div class="ts-item">
+          <div class="ts-head" onclick="toggleTimestamp(${i})">
+            <div class="ts-time">${ts.time}</div>
+            <div class="ts-category ${cat.cssClass}">${cat.label}</div>
+            <div class="ts-title">${ts.title}</div>
+            <div class="ts-chevron" id="chev-${i}">▼</div>
+          </div>
+          <div class="ts-body" id="body-${i}">${ts.description}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderPriorities(priorities) {
+    document.getElementById('priorityList').innerHTML = priorities.map((text, i) => `
+      <div class="priority-item">
+        <div class="priority-num">${i + 1}.</div>
+        <div class="priority-text">${text}</div>
+      </div>`).join('');
+  }
+
+  function toggleTimestamp(index) {
+    const body    = document.getElementById(`body-${index}`);
+    const chevron = document.getElementById(`chev-${index}`);
+    chevron.textContent = body.classList.toggle('open') ? '▲' : '▼';
+  }
+
 </script>
 </body>
 </html>
