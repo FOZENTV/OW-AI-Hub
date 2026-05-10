@@ -474,50 +474,26 @@
   const BASE = 'https://generativelanguage.googleapis.com';
 
   async function uploadToGemini(apiKey, file) {
-    // 1. Initier un upload resumable
-    const initRes = await fetch(
-      `${BASE}/upload/v1beta/files?uploadType=resumable&key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Upload-Protocol': 'resumable',
-          'X-Goog-Upload-Command': 'start',
-          'X-Goog-Upload-Header-Content-Length': file.size,
-          'X-Goog-Upload-Header-Content-Type': file.type,
-        },
-        body: JSON.stringify({ file: { display_name: file.name } }),
-      }
-    );
-
-    if (!initRes.ok) {
-      const err = await initRes.json();
-      throw new Error(err.error?.message || 'Erreur init upload');
-    }
-
-    const uploadUrl = initRes.headers.get('X-Goog-Upload-URL');
-    if (!uploadUrl) throw new Error('URL upload introuvable dans la réponse');
-
-    // 2. Uploader le fichier
     setProgress(30, `Upload en cours… (${(file.size/1024/1024).toFixed(0)} Mo)`);
 
-    const uploadRes = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Length': file.size,
-        'X-Goog-Upload-Offset': '0',
-        'X-Goog-Upload-Command': 'upload, finalize',
-      },
-      body: file,
-    });
+    // Upload multipart — pas de headers custom, compatible CORS navigateur
+    const metadata = JSON.stringify({ file: { display_name: file.name } });
+    const body = new FormData();
+    body.append('metadata', new Blob([metadata], { type: 'application/json' }));
+    body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }));
 
-    if (!uploadRes.ok) {
-      const err = await uploadRes.json();
-      throw new Error(err.error?.message || 'Erreur upload fichier');
+    const res = await fetch(
+      `${BASE}/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,
+      { method: 'POST', body }
+    );
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'Erreur upload : ' + res.status);
     }
 
-    const fileData = await uploadRes.json();
-    return fileData.file; // { name, uri, state, ... }
+    const data = await res.json();
+    return data.file; // { name, uri, state, ... }
   }
 
   async function waitForActive(apiKey, fileName) {
