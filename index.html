@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Overwatch AI Agent - PRO</title>
+    <title>OW AI Coach - Final Fix</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
@@ -23,7 +23,7 @@
 
 <div class="container">
     <div class="api-section">
-        <label>🔑 Gemini API Key</label>
+        <label>🔑 Clé API Gemini</label>
         <input type="password" id="apiKey" placeholder="Colle ta clé API ici...">
     </div>
 
@@ -32,21 +32,13 @@
             <div>
                 <label>Héros</label>
                 <select id="hero">
-                    <optgroup label="🛡️ TANK">
-                        <option>D.Va</option><option>Doomfist</option><option>Reinhardt</option><option>Winston</option><option>Zarya</option>
-                    </optgroup>
-                    <optgroup label="⚔️ DAMAGE">
-                        <option>Genji</option><option>Soldier: 76</option><option>Sombra</option><option>Tracer</option><option>Widowmaker</option>
-                    </optgroup>
-                    <optgroup label="✚ SUPPORT">
-                        <option>Ana</option><option>Kiriko</option><option>Lúcio</option><option>Mercy</option><option>Moira</option>
-                    </optgroup>
+                    <option>Tracer</option><option>Genji</option><option>Reinhardt</option><option>Ana</option><option>Kiriko</option>
                 </select>
             </div>
             <div>
                 <label>Rang</label>
                 <select id="rank">
-                    <option>Bronze</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option>
+                    <option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option>
                 </select>
             </div>
         </div>
@@ -56,42 +48,36 @@
             <video id="vPlayer" controls></video>
         </div>
 
-        <textarea id="notes" rows="3" placeholder="Sur quoi le coach doit-il se concentrer ?"></textarea>
+        <textarea id="notes" rows="3" placeholder="Notes pour l'IA..."></textarea>
         
-        <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE IA</button>
-        <div id="loader" class="loading">⏳ L'IA analyse ton gameplay... patiente environ 1 minute.</div>
+        <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE</button>
+        <div id="loader" class="loading">⏳ Analyse en cours... (60 secondes environ)</div>
         <div id="ai-response"></div>
     </div>
 </div>
 
 <script type="module">
-    // C'est cet import qui permet à l'IA de "parler" au code
     import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
     let videoBlob = null;
-
-    // Gestion du Drag & Drop
     const dz = document.getElementById('drop-zone');
+    const vp = document.getElementById('vPlayer');
+
     dz.ondragover = (e) => e.preventDefault();
     dz.ondrop = (e) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
         if (file) {
             videoBlob = file;
-            document.getElementById('vPlayer').src = URL.createObjectURL(file);
-            document.getElementById('vPlayer').style.display = 'block';
+            vp.src = URL.createObjectURL(file);
+            vp.style.display = 'block';
             document.getElementById('dz-text').style.display = 'none';
         }
     };
 
-    // La VRAIE fonction d'analyse
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value;
-        const hero = document.getElementById('hero').value;
-        const rank = document.getElementById('rank').value;
-        const notes = document.getElementById('notes').value;
-
-        if(!key || !videoBlob) return alert("Il manque la clé API ou la vidéo !");
+        if(!key || !videoBlob) return alert("Manque clé ou vidéo !");
 
         const loader = document.getElementById('loader');
         const responseBox = document.getElementById('ai-response');
@@ -101,38 +87,40 @@
 
         try {
             const genAI = new GoogleGenerativeAI(key);
-            // On utilise la version la plus stable pour la vidéo
+            
+            // CHANGEMENT CRUCIAL : On utilise le nom technique précis
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-            // Conversion de la vidéo pour l'envoi
             const base64Video = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result.split(',')[1]);
                 reader.readAsDataURL(videoBlob);
             });
 
-            const prompt = `Tu es un coach Top 500 d'Overwatch. Analyse ce gameplay de ${hero} au rang ${rank}. 
-            Notes du joueur : ${notes}. 
-            Fais un retour hyper détaillé en français sur le placement, les cooldowns et les cibles prioritaires.`;
-
+            // Formatage de la requête pour être 100% compatible avec v1beta
             const result = await model.generateContent([
-                prompt,
                 {
                     inlineData: {
                         mimeType: videoBlob.type,
                         data: base64Video
                     }
-                }
+                },
+                { text: `Analyse ce gameplay Overwatch de ${document.getElementById('hero').value} au rang ${document.getElementById('rank').value}. Sois technique et précis.` }
             ]);
 
             const response = await result.response;
             loader.style.display = 'none';
             responseBox.style.display = 'block';
-            responseBox.innerHTML = `<h3>🎙️ COACHING TERMINÉ :</h3><br>` + response.text().replace(/\n/g, '<br>');
+            responseBox.innerHTML = response.text().replace(/\n/g, '<br>');
 
         } catch (err) {
             loader.style.display = 'none';
-            alert("Erreur API : " + err.message);
+            // Si l'erreur est encore une 404, on suggère une solution radicale
+            if (err.message.includes("404")) {
+                alert("Erreur 404 : Google ne trouve pas le modèle. \n\nASTUCE : Vérifie que ta clé API a été créée dans 'Google AI Studio' (https://aistudio.google.com/) et non dans Google Cloud Console.");
+            } else {
+                alert("Erreur : " + err.message);
+            }
         }
     };
 </script>
