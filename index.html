@@ -2,56 +2,36 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW AI Coach - Final Fix</title>
+    <title>OW Coach AI - Fix 404</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
-        .api-section { background: #000; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.8em; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; background: #0b0c10; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; }
-        video { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
-        .analyze-btn { background: var(--ow-orange); color: white; border: none; padding: 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1em; text-transform: uppercase; }
-        #ai-response { margin-top: 20px; padding: 20px; background: #12141d; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; line-height: 1.6; }
-        .loading { color: var(--ow-blue); font-weight: bold; display: none; margin: 15px 0; }
+        .container { max-width: 800px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #000; color: #fff; border: 1px solid #444; border-radius: 5px; }
+        #drop-zone { border: 2px dashed var(--ow-blue); padding: 20px; text-align: center; margin: 15px 0; cursor: pointer; }
+        video { width: 100%; display: none; margin-top: 10px; }
+        .btn { background: var(--ow-orange); color: #fff; border: none; padding: 15px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        #ai-response { margin-top: 20px; white-space: pre-wrap; display: none; padding: 15px; background: #111; border-left: 3px solid var(--ow-orange); }
+        .loader { display: none; color: var(--ow-blue); text-align: center; margin: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="api-section">
-        <label>🔑 Clé API Gemini</label>
-        <input type="password" id="apiKey" placeholder="Colle ta clé API ici...">
-    </div>
-
     <div class="card">
-        <div class="grid">
-            <div>
-                <label>Héros</label>
-                <select id="hero">
-                    <option>Tracer</option><option>Genji</option><option>Reinhardt</option><option>Ana</option><option>Kiriko</option>
-                </select>
-            </div>
-            <div>
-                <label>Rang</label>
-                <select id="rank">
-                    <option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="drop-zone">
-            <b id="dz-text">GLISSE TA VOD ICI</b>
-            <video id="vPlayer" controls></video>
-        </div>
-
-        <textarea id="notes" rows="3" placeholder="Notes pour l'IA..."></textarea>
+        <h2>OW COACH AI</h2>
+        <input type="password" id="apiKey" placeholder="Clé API Gemini (AI Studio)">
         
-        <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE</button>
-        <div id="loader" class="loading">⏳ Analyse en cours... (60 secondes environ)</div>
+        <div class="grid">
+            <select id="hero"><option>Tracer</option><option>Genji</option><option>Ana</option></select>
+            <select id="rank"><option>Gold</option><option>Diamond</option><option>Master</option></select>
+        </div>
+
+        <div id="drop-zone"><b>GLISSE TA VIDÉO ICI</b><video id="vPlayer" controls></video></div>
+        
+        <button class="btn" id="runBtn">🚀 ANALYSER</button>
+        <div id="loader" class="loader">⏳ Analyse en cours... (Vérification du modèle)</div>
         <div id="ai-response"></div>
     </div>
 </div>
@@ -60,67 +40,55 @@
     import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
     let videoBlob = null;
-    const dz = document.getElementById('drop-zone');
-    const vp = document.getElementById('vPlayer');
-
-    dz.ondragover = (e) => e.preventDefault();
-    dz.ondrop = (e) => {
+    document.getElementById('drop-zone').ondragover = (e) => e.preventDefault();
+    document.getElementById('drop-zone').ondrop = (e) => {
         e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            videoBlob = file;
-            vp.src = URL.createObjectURL(file);
-            vp.style.display = 'block';
-            document.getElementById('dz-text').style.display = 'none';
-        }
+        videoBlob = e.dataTransfer.files[0];
+        const vp = document.getElementById('vPlayer');
+        vp.src = URL.createObjectURL(videoBlob);
+        vp.style.display = 'block';
     };
 
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value;
-        if(!key || !videoBlob) return alert("Manque clé ou vidéo !");
+        if (!key || !videoBlob) return alert("Clé ou vidéo manquante !");
 
         const loader = document.getElementById('loader');
         const responseBox = document.getElementById('ai-response');
-        
         loader.style.display = 'block';
         responseBox.style.display = 'none';
 
         try {
             const genAI = new GoogleGenerativeAI(key);
             
-            // CHANGEMENT CRUCIAL : On utilise le nom technique précis
+            // TEST DE NOM : On utilise le nom complet avec le préfixe "models/"
+            // C'est souvent ce qui débloque la 404
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-            const base64Video = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.readAsDataURL(videoBlob);
-            });
+            const reader = new FileReader();
+            reader.readAsDataURL(videoBlob);
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
 
-            // Formatage de la requête pour être 100% compatible avec v1beta
-            const result = await model.generateContent([
-                {
-                    inlineData: {
-                        mimeType: videoBlob.type,
-                        data: base64Video
-                    }
-                },
-                { text: `Analyse ce gameplay Overwatch de ${document.getElementById('hero').value} au rang ${document.getElementById('rank').value}. Sois technique et précis.` }
-            ]);
+                try {
+                    const result = await model.generateContent([
+                        { text: "Tu es un coach Overwatch. Analyse ce gameplay." },
+                        { inlineData: { mimeType: videoBlob.type, data: base64Data } }
+                    ]);
 
-            const response = await result.response;
+                    const response = await result.response;
+                    loader.style.display = 'none';
+                    responseBox.style.display = 'block';
+                    responseBox.innerText = response.text();
+                } catch (innerError) {
+                    loader.style.display = 'none';
+                    console.error(innerError);
+                    alert("Erreur fatale : " + innerError.message);
+                }
+            };
+        } catch (e) {
             loader.style.display = 'none';
-            responseBox.style.display = 'block';
-            responseBox.innerHTML = response.text().replace(/\n/g, '<br>');
-
-        } catch (err) {
-            loader.style.display = 'none';
-            // Si l'erreur est encore une 404, on suggère une solution radicale
-            if (err.message.includes("404")) {
-                alert("Erreur 404 : Google ne trouve pas le modèle. \n\nASTUCE : Vérifie que ta clé API a été créée dans 'Google AI Studio' (https://aistudio.google.com/) et non dans Google Cloud Console.");
-            } else {
-                alert("Erreur : " + err.message);
-            }
+            alert("Erreur d'initialisation : " + e.message);
         }
     };
 </script>
