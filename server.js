@@ -187,12 +187,12 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     const sizeMb = (video.size / 1024 / 1024).toFixed(1);
     console.log(`[*] Upload vers Gemini (${sizeMb} Mo)…`);
 
-    const fileStream = fs.createReadStream(tmpPath);
     const uploaded = await ai.files.upload({
-      file: fileStream,
+      file: new Blob([fs.readFileSync(tmpPath)], { type: video.mimetype || "video/mp4" }),
       config: {
         mimeType: video.mimetype || "video/mp4",
         displayName: video.originalname,
+        sizeBytes: video.size,
       },
     });
 
