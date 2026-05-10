@@ -2,75 +2,92 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW AI Coach - Final Fix</title>
+    <title>OW Coach AI - Gemini 3 Edition</title>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
-        .card { max-width: 450px; margin: auto; background: #222; padding: 20px; border-radius: 15px; border: 1px solid #444; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f1012; color: white; text-align: center; padding: 20px; }
+        .card { max-width: 500px; margin: auto; background: #1c1e22; padding: 30px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
-        input { background: #000; color: white; border: 1px solid #555; }
-        button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; }
-        #drop-zone { border: 2px dashed #4096ee; padding: 30px; margin: 15px 0; border-radius: 10px; cursor: pointer; }
-        #res { text-align: left; background: #111; padding: 15px; margin-top: 20px; border-radius: 5px; display: none; white-space: pre-wrap; font-size: 0.9em; }
+        input { background: #000; color: #fa9c1e; border: 1px solid #444; font-family: monospace; }
+        button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; font-size: 1em; }
+        button:hover { background: #ff7b00; }
+        #drop-zone { border: 2px dashed #4096ee; padding: 40px; margin: 20px 0; border-radius: 10px; cursor: pointer; background: rgba(64, 150, 238, 0.05); }
+        #res { text-align: left; background: #000; padding: 15px; margin-top: 20px; border-radius: 5px; display: none; white-space: pre-wrap; border-left: 4px solid #fa9c1e; }
+        .loading { display: none; color: #4096ee; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2 style="color:#fa9c1e;">OW COACH AI</h2>
-        <input type="password" id="key" placeholder="Clé API Gemini">
-        <div id="drop-zone">DÉPOSE TA VOD ICI</div>
-        <button id="go">LANCER L'ANALYSE</button>
-        <div id="status" style="display:none; color:#4096ee;">⏳ Connexion aux serveurs...</div>
+        <h2 style="color:#fa9c1e; margin:0;">OW COACH AI <span style="font-size: 0.5em; vertical-align: middle; color: #4096ee;">V3</span></h2>
+        <p style="font-size: 0.8em; color: #888;">Optimisé pour Gemini 3 Flash Preview</p>
+        
+        <input type="password" id="apiKey" placeholder="Colle ta clé API Gemini">
+        <div id="drop-zone"><b>GLISSE TA VOD ICI (.MP4)</b></div>
+        
+        <button id="runBtn">🚀 ANALYSER MON GAMEPLAY</button>
+        <p id="loading" class="loading">⏳ Analyse par Gemini 3 en cours...</p>
         <div id="res"></div>
     </div>
 
 <script>
-    let file = null;
-    document.getElementById('drop-zone').ondragover = (e) => e.preventDefault();
-    document.getElementById('drop-zone').ondrop = (e) => {
+    let videoFile = null;
+    const dz = document.getElementById('drop-zone');
+
+    dz.ondragover = (e) => e.preventDefault();
+    dz.ondrop = (e) => {
         e.preventDefault();
-        file = e.dataTransfer.files[0];
-        document.getElementById('drop-zone').innerText = "✅ " + file.name;
+        videoFile = e.dataTransfer.files[0];
+        dz.innerHTML = "✅ Vidéo prête : " + videoFile.name;
+        dz.style.borderColor = "#fa9c1e";
     };
 
-    document.getElementById('go').onclick = async () => {
-        const apiKey = document.getElementById('key').value.trim();
-        if (!apiKey || !file) return alert("Clé ou vidéo manquante !");
+    document.getElementById('runBtn').onclick = async () => {
+        const key = document.getElementById('apiKey').value.trim();
+        if (!key || !videoFile) return alert("N'oublie pas la clé ou la vidéo !");
 
-        document.getElementById('status').style.display = 'block';
-        document.getElementById('res').style.display = 'none';
+        const load = document.getElementById('loading');
+        const responseBox = document.getElementById('res');
+        
+        load.style.display = 'block';
+        responseBox.style.display = 'none';
 
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(videoFile);
         reader.onloadend = async () => {
-            const base64 = reader.result.split(',')[1];
-            
-            // UTILISATION DE L'ENDPOINT V1 (STABLE) - Très important pour l'Europe
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const base64Data = reader.result.split(',')[1];
+
+            // CIBLE : GEMINI 3 FLASH PREVIEW (vu sur tes captures)
+            const modelName = "gemini-3-flash-preview"; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [
-                            { text: "Tu es un coach Overwatch. Analyse ce gameplay." },
-                            { inline_data: { mime_type: "video/mp4", data: base64 } }
-                        ]}]
+                        contents: [{
+                            parts: [
+                                { text: "Tu es un coach Overwatch pro. Analyse cette action et donne 3 conseils précis en français." },
+                                { inline_data: { mime_type: "video/mp4", data: base64Data } }
+                            ]
+                        }]
                     })
                 });
 
                 const data = await response.json();
-                document.getElementById('status').style.display = 'none';
+                load.style.display = 'none';
 
                 if (data.error) {
-                    document.getElementById('res').innerHTML = `<b style="color:red;">Erreur :</b> ${data.error.message}`;
+                    responseBox.innerHTML = `<b style="color:red;">Erreur :</b> ${data.error.message}<br><br><small>Si c'est une 404, Google n'a pas encore fini d'activer Gemini 3 sur ton compte.</small>`;
                 } else {
-                    document.getElementById('res').innerText = data.candidates[0].content.parts[0].text;
+                    responseBox.innerText = data.candidates[0].content.parts[0].text;
                 }
-                document.getElementById('res').style.display = 'block';
-            } catch (e) {
-                alert("Erreur réseau : " + e.message);
+                responseBox.style.display = 'block';
+
+            } catch (err) {
+                load.style.display = 'none';
+                alert("Erreur réseau : " + err.message);
             }
         };
     };
