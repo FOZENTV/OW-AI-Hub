@@ -68,6 +68,9 @@ const HERO_CONTEXT = {
 };
 
 function buildPrompt(hero, rank) {
+  return `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
+Le joueur joue ${hero} en ranked ${rank}.
+Réponds UNIQUEMENT en JSON valide sans markdown ni backticks :
   const rankTips = RANK_CONTEXT[rank] || "Analyse le gameplay de façon adaptée au niveau du joueur.";
   const heroTips = HERO_CONTEXT[hero] || `Joue ${hero}. Analyse son kit : cooldowns, positionnement, gestion des ressources et impact sur le teamfight.`;
 
@@ -95,6 +98,11 @@ CATÉGORIES :
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 {
+  "summary": "résumé global 3-4 phrases",
+  "timestamps": [{"time":"MM:SS","category":"death|mistake|good|positioning|ulti","title":"...","description":"..."}],
+  "priorities": ["priorité 1","priorité 2","priorité 3"]
+}
+Identifie 6 à 10 moments clés. Sois précis et adapté au niveau ${rank} sur ${hero}.`;
   "summary": "Bilan global de 4-5 phrases : niveau général, points forts, axes d'amélioration",
   "timestamps": [
     {
