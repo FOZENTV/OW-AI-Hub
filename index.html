@@ -2,90 +2,87 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW Coach AI - Gemini 3 Ultra-Stable</title>
+    <title>OW Coach AI - Gemini 3 Fix</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f1012; color: white; text-align: center; padding: 20px; }
-        .card { max-width: 500px; margin: auto; background: #1c1e22; padding: 30px; border-radius: 15px; border: 1px solid #333; }
+        body { font-family: sans-serif; background: #0f1012; color: white; text-align: center; padding: 20px; }
+        .card { max-width: 500px; margin: auto; background: #1c1e22; padding: 30px; border-radius: 15px; border: 1px solid #fa9c1e; }
         input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
         input { background: #000; color: #fa9c1e; border: 1px solid #444; }
         button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; }
-        #drop-zone { border: 2px dashed #4096ee; padding: 40px; margin: 20px 0; border-radius: 10px; cursor: pointer; background: rgba(64, 150, 238, 0.05); }
+        #drop-zone { border: 2px dashed #4096ee; padding: 40px; margin: 15px 0; border-radius: 10px; cursor: pointer; background: rgba(64, 150, 238, 0.05); }
         #res { text-align: left; background: #000; padding: 20px; margin-top: 20px; border-radius: 8px; display: none; white-space: pre-wrap; border-left: 5px solid #fa9c1e; }
-        .loading { display: none; color: #4096ee; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2 style="color:#fa9c1e;">OW COACH AI V3</h2>
+        <h2 style="color:#fa9c1e;">OW COACH AI - V3</h2>
         <input type="password" id="apiKey" placeholder="Ta clé API Gemini 3">
         <div id="drop-zone"><b>GLISSE TA VOD MP4 ICI</b></div>
-        <button id="runBtn">🚀 ANALYSER LE GAMEPLAY</button>
-        <p id="loading" class="loading">⏳ Chargement de la vidéo et analyse...</p>
+        <button id="runBtn">🚀 LANCER L'ANALYSE</button>
+        <p id="loading" style="display:none; color:#4096ee;">⏳ Analyse en cours par Gemini 3...</p>
         <div id="res"></div>
     </div>
 
 <script>
     let videoFile = null;
-    const dz = document.getElementById('drop-zone');
-
-    dz.ondragover = (e) => e.preventDefault();
-    dz.ondrop = (e) => {
+    document.getElementById('drop-zone').ondragover = (e) => e.preventDefault();
+    document.getElementById('drop-zone').ondrop = (e) => {
         e.preventDefault();
         videoFile = e.dataTransfer.files[0];
-        dz.innerHTML = "✅ Prêt : " + videoFile.name;
+        document.getElementById('drop-zone').innerText = "✅ Vidéo prête : " + videoFile.name;
     };
 
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value.trim();
         if (!key || !videoFile) return alert("Clé ou vidéo manquante !");
 
-        const load = document.getElementById('loading');
-        const resBox = document.getElementById('res');
-        load.style.display = 'block';
-        resBox.style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('res').style.display = 'none';
 
-        try {
-            // 1. On lit le fichier en base64 (format Gemini 3 inlineData)
-            const reader = new FileReader();
-            reader.readAsDataURL(videoFile);
-            reader.onloadend = async () => {
-                const base64Data = reader.result.split(',')[1];
+        const reader = new FileReader();
+        reader.readAsDataURL(videoFile);
+        reader.onloadend = async () => {
+            const base64Data = reader.result.split(',')[1];
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
+            // Utilisation impérative de v1beta pour Gemini 3 Flash Preview
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
 
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: "Tu es un coach Overwatch pro. Analyse cette VOD et donne 3 conseils tactiques en français." },
+                        { 
+                            inlineData: { // Correction : Majuscule sur le 'D'
+                                mimeType: "video/mp4", // Correction : Majuscule sur le 'T'
+                                data: base64Data 
+                            } 
+                        }
+                    ]
+                }]
+            };
+
+            try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: "Analyse ce gameplay Overwatch. Donne 3 conseils tactiques en français." },
-                                { 
-                                    inlineData: { 
-                                        mimeType: "video/mp4", 
-                                        data: base64Data 
-                                    } 
-                                }
-                            ]
-                        }]
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
-                load.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
 
                 if (data.error) {
-                    resBox.innerHTML = "<b style='color:red;'>Erreur :</b> " + data.error.message;
+                    document.getElementById('res').innerText = "Erreur : " + data.error.message;
                 } else if (data.candidates) {
-                    resBox.innerText = data.candidates[0].content.parts[0].text;
+                    document.getElementById('res').innerText = data.candidates[0].content.parts[0].text;
                 }
-                resBox.style.display = 'block';
-            };
-        } catch (err) {
-            load.style.display = 'none';
-            alert("Erreur critique : " + err.message);
-        }
+                document.getElementById('res').style.display = 'block';
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                alert("Erreur réseau : " + err.message);
+            }
+        };
     };
 </script>
 </body>
