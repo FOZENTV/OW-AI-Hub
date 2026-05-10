@@ -2,23 +2,23 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Overwatch Coach - Gemini 3</title>
+    <title>OW Coach AI - Gemini 3 Fix</title>
     <style>
         body { font-family: sans-serif; background: #111; color: white; text-align: center; padding: 20px; }
-        .card { max-width: 500px; margin: auto; background: #222; padding: 20px; border-radius: 10px; border: 1px solid #fa9c1e; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        .card { max-width: 500px; margin: auto; background: #222; padding: 25px; border-radius: 12px; border: 1px solid #fa9c1e; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
         button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; }
-        #drop-zone { border: 2px dashed #4096ee; padding: 30px; margin: 10px 0; cursor: pointer; }
-        #res { text-align: left; background: #000; padding: 15px; margin-top: 20px; display: none; white-space: pre-wrap; border-left: 4px solid #fa9c1e; }
+        #drop-zone { border: 2px dashed #4096ee; padding: 30px; margin: 15px 0; cursor: pointer; background: rgba(0,0,0,0.3); }
+        #res { text-align: left; background: #000; padding: 15px; margin-top: 20px; display: none; white-space: pre-wrap; border-left: 4px solid #fa9c1e; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color:#fa9c1e;">OW COACH AI - GEMINI 3</h2>
-        <input type="password" id="key" placeholder="Clé API Gemini (Compte validé)">
+        <h2 style="color:#fa9c1e;">OW COACH AI - V3</h2>
+        <input type="password" id="key" placeholder="Ta clé API Gemini 3">
         <div id="drop-zone">GLISSE TA VOD ICI (.MP4)</div>
         <button id="btn">🚀 LANCER L'ANALYSE</button>
-        <p id="wait" style="display:none; color:#4096ee;">⏳ Gemini 3 analyse ton gameplay...</p>
+        <p id="wait" style="display:none; color:#4096ee;">⏳ Analyse en cours par Gemini 3...</p>
         <div id="res"></div>
     </div>
 
@@ -44,19 +44,28 @@
         reader.onloadend = async () => {
             const base64 = reader.result.split(',')[1];
             
-            // L'URL exacte pour ton accès Gemini 3 Preview
+            // URL corrigée pour Gemini 3
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
+
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: "Tu es un coach Overwatch Top 500. Analyse ce gameplay et donne 3 conseils tactiques en français." },
+                        { 
+                            inlineData: { // Correction ici: inlineData au lieu de inline_data pour Gemini 3
+                                mimeType: "video/mp4", 
+                                data: base64 
+                            } 
+                        }
+                    ]
+                }]
+            };
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [
-                            { text: "Tu es un coach Overwatch Top 500. Analyse ce gameplay et donne 3 conseils." },
-                            { inline_data: { mime_type: "video/mp4", data: base64 } }
-                        ]}]
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
@@ -64,11 +73,14 @@
 
                 if (data.error) {
                     document.getElementById('res').innerText = "Erreur : " + data.error.message;
-                } else {
+                } else if (data.candidates && data.candidates[0].content) {
                     document.getElementById('res').innerText = data.candidates[0].content.parts[0].text;
+                } else {
+                    document.getElementById('res').innerText = "Gemini n'a pas pu générer de réponse. Réessaie avec une vidéo plus courte.";
                 }
                 document.getElementById('res').style.display = 'block';
             } catch (e) {
+                document.getElementById('wait').style.display = 'none';
                 alert("Erreur réseau : " + e.message);
             }
         };
