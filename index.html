@@ -2,31 +2,20 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW AI Coaching Hub - V2</title>
+    <title>OW AI Coaching Hub - V3</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
         .container { max-width: 900px; margin: auto; }
-        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
         .api-section { background: #000; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.8em; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #0b0c10; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        
         #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; cursor: pointer; transition: 0.3s; }
-        #drop-zone:hover { background: rgba(64, 150, 238, 0.1); }
-        video { width: 100%; border-radius: 10px; display: none; margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-
-        .analyze-btn { 
-            background: linear-gradient(90deg, #fa9c1e, #ff6b00); color: white; border: none; padding: 20px; 
-            border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.2em; text-transform: uppercase;
-        }
-        .analyze-btn:hover { filter: brightness(1.1); }
-        
-        #ai-response { 
-            margin-top: 20px; padding: 25px; background: #12141d; border-left: 4px solid var(--ow-orange); 
-            display: none; white-space: pre-wrap; line-height: 1.6; color: #eee; font-size: 1.05em;
-        }
+        video { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
+        .analyze-btn { background: linear-gradient(90deg, #fa9c1e, #ff6b00); color: white; border: none; padding: 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.2em; text-transform: uppercase; }
+        #ai-response { margin-top: 20px; padding: 25px; background: #12141d; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; line-height: 1.6; color: #eee; }
         .loading { display: none; text-align: center; color: var(--ow-blue); font-weight: bold; padding: 20px; border: 1px solid var(--ow-blue); border-radius: 8px; margin-top: 20px; }
     </style>
 </head>
@@ -34,12 +23,12 @@
 
 <div class="container">
     <div class="api-section">
-        <label>🔑 CLÉ API GEMINI (Google AI Studio)</label>
+        <label>🔑 CLÉ API GEMINI (AI Studio)</label>
         <input type="password" id="apiKey" placeholder="Colle ta clé API ici...">
     </div>
 
     <div class="card">
-        <h1 style="color:var(--ow-orange); margin-top:0; letter-spacing: 1px;">OW AI COACHING HUB</h1>
+        <h1 style="color:var(--ow-orange); margin-top:0;">OW AI COACHING - NEXT GEN</h1>
         
         <div class="grid">
             <div>
@@ -57,25 +46,18 @@
                 </select>
             </div>
             <div>
-                <label>Rang Actuel</label>
+                <label>Rang</label>
                 <select id="rank">
                     <option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option><option>Champion</option><option>Top 500</option>
                 </select>
             </div>
         </div>
 
-        <div id="drop-zone">
-            <b id="instruction-text">GLISSE TA VOD ICI (MP4/WEBM)</b>
-            <video id="vPlayer" controls></video>
-        </div>
-
-        <label>Focus de l'Analyse</label>
-        <textarea id="notes" rows="3" placeholder="Ex: Analyse mes entrées de fight et mon tracking sur les supports..."></textarea>
-        
+        <div id="drop-zone"><b>GLISSE TA VOD ICI</b><video id="vPlayer" controls></video></div>
+        <textarea id="notes" rows="3" placeholder="Notes pour le coach..."></textarea>
         <br><br>
-        <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE COACHING</button>
-        
-        <div id="loader" class="loading">⏳ LE COACH ANALYSE TA VOD...<br><small>(Cela peut prendre entre 30 et 60 secondes selon la taille du fichier)</small></div>
+        <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE</button>
+        <div id="loader" class="loading">⏳ L'IA (Flash 2.0/3.0) ANALYSE TA VOD...</div>
         <div id="ai-response"></div>
     </div>
 </div>
@@ -86,65 +68,43 @@
     let videoBlob = null;
     const dz = document.getElementById('drop-zone');
     const vp = document.getElementById('vPlayer');
-    const instructionText = document.getElementById('instruction-text');
 
-    dz.ondragover = (e) => { e.preventDefault(); dz.style.borderColor = "white"; };
-    dz.ondragleave = () => { dz.style.borderColor = "var(--ow-blue)"; };
+    dz.ondragover = (e) => e.preventDefault();
     dz.ondrop = (e) => {
         e.preventDefault();
-        dz.style.borderColor = "var(--ow-blue)";
         const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('video/')) {
+        if (file) {
             videoBlob = file;
             vp.src = URL.createObjectURL(file);
             vp.style.display = 'block';
-            instructionText.style.display = 'none';
+            dz.querySelector('b').style.display = 'none';
         }
     };
 
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value;
-        const hero = document.getElementById('hero').value;
-        const rank = document.getElementById('rank').value;
-        const notes = document.getElementById('notes').value || "Pas de notes spécifiques.";
-
-        if (!key) return alert("Colle ta clé API Gemini d'abord !");
-        if (!videoBlob) return alert("Glisse une vidéo dans la zone prévue !");
+        if (!key || !videoBlob) return alert("Clé ou Vidéo manquante !");
 
         const loader = document.getElementById('loader');
         const responseBox = document.getElementById('ai-response');
-        
         loader.style.display = 'block';
         responseBox.style.display = 'none';
-        responseBox.innerHTML = "";
 
         try {
             const genAI = new GoogleGenerativeAI(key);
             
-            // UTILISATION DU MODÈLE LATEST (Correction de l'erreur 404)
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-            // Si flash-latest échoue encore, essaie : "gemini-2.0-flash-exp"
+            // UTILISATION DU MODÈLE LE PLUS RÉCENT (2.0 Flash)
+            // Ce modèle remplace les anciennes versions beta et v1
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
-            const base64Video = await new Promise((resolve, reject) => {
+            const base64Video = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
                 reader.readAsDataURL(videoBlob);
             });
 
-            const prompt = `Tu es un coach professionnel d'Overwatch 2 (niveau Top 500). 
-            Tu dois analyser ce gameplay. 
-            Joueur : ${hero} 
-            Rang : ${rank} 
-            Focus demandé : ${notes}
-            
-            Fais un retour structuré en français avec des points précis sur :
-            1. Placement et Positionnement.
-            2. Gestion des Cooldowns et ressources.
-            3. Target Priority (Priorité des cibles).
-            4. Timing d'engagement.
-            
-            Sois très précis, critique mais constructif comme un vrai coach pro.`;
+            const prompt = `Tu es un coach professionnel d'Overwatch 2 (Top 500). Analyse ce gameplay de ${document.getElementById('hero').value} au rang ${document.getElementById('rank').value}. 
+            Fais un retour hyper détaillé en français sur le placement, la gestion des ressources, la priorité des cibles et le timing.`;
 
             const result = await model.generateContent([
                 prompt,
@@ -152,16 +112,14 @@
             ]);
 
             const response = await result.response;
-            const feedback = response.text();
-
             loader.style.display = 'none';
             responseBox.style.display = 'block';
-            responseBox.innerHTML = `<h2 style="color:var(--ow-orange); margin-top:0;">🎙️ DEBRIEF DU COACH</h2><hr style="border:0; border-top:1px solid #444; margin-bottom:20px;">` + feedback.replace(/\n/g, '<br>');
+            responseBox.innerHTML = `<h2>🎙️ FEEDBACK DU COACH</h2><br>` + response.text().replace(/\n/g, '<br>');
 
         } catch (error) {
             loader.style.display = 'none';
-            console.error(error);
             alert("Erreur : " + error.message);
+            console.error("Détails de l'erreur:", error);
         }
     };
 </script>
