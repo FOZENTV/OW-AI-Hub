@@ -29,14 +29,7 @@
       --font-body:    'Inter', sans-serif;
     }
 
-    /* ─────────────────────────────────────────
-       RESET & BASE
-    ───────────────────────────────────────── */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background: var(--bg);
@@ -45,25 +38,16 @@
       min-height: 100vh;
     }
 
-    /* Subtle scanline overlay */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.025) 2px,
-        rgba(0, 0, 0, 0.025) 4px
-      );
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
       pointer-events: none;
       z-index: 999;
     }
 
-    /* ─────────────────────────────────────────
-       HEADER
-    ───────────────────────────────────────── */
+    /* ── Header ── */
     .header {
       padding: 20px 32px;
       border-bottom: 1px solid var(--border);
@@ -72,7 +56,6 @@
       align-items: center;
       gap: 14px;
     }
-
     .logo {
       font-family: var(--font-display);
       font-size: 20px;
@@ -81,12 +64,7 @@
       text-transform: uppercase;
       color: var(--accent);
     }
-
-    .logo span {
-      color: var(--text3);
-      font-weight: 500;
-    }
-
+    .logo span { color: var(--text3); font-weight: 500; }
     .badge {
       font-size: 10px;
       font-weight: 600;
@@ -98,21 +76,11 @@
       color: var(--text3);
     }
 
-    /* ─────────────────────────────────────────
-       LAYOUT
-    ───────────────────────────────────────── */
-    .main {
-      padding: 28px 32px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
+    /* ── Layout ── */
+    .main { padding: 28px 32px; max-width: 900px; margin: 0 auto; }
 
-    /* ─────────────────────────────────────────
-       FORM ELEMENTS
-    ───────────────────────────────────────── */
-    input[type="password"],
-    input[type="text"],
-    select {
+    /* ── Form elements ── */
+    input[type="password"], input[type="text"], select {
       background: var(--bg3);
       border: 1px solid var(--border2);
       border-radius: 5px;
@@ -123,28 +91,12 @@
       font-family: var(--font-body);
       transition: border-color 0.2s;
     }
+    input[type="password"]:focus, input[type="text"]:focus, select:focus { border-color: var(--accent); }
+    input[type="password"]::placeholder { color: var(--text3); }
+    select option { background: var(--bg3); }
+    input[type="file"] { display: none; }
 
-    input[type="password"]:focus,
-    input[type="text"]:focus,
-    select:focus {
-      border-color: var(--accent);
-    }
-
-    input[type="password"]::placeholder {
-      color: var(--text3);
-    }
-
-    select option {
-      background: var(--bg3);
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    /* ─────────────────────────────────────────
-       API KEY ROW
-    ───────────────────────────────────────── */
+    /* ── API Row ── */
     .api-row {
       display: flex;
       align-items: center;
@@ -155,7 +107,6 @@
       border-radius: 8px;
       padding: 14px 18px;
     }
-
     .api-row label {
       font-size: 11px;
       font-weight: 600;
@@ -164,20 +115,10 @@
       color: var(--text2);
       white-space: nowrap;
     }
+    .api-row a { color: var(--blue); font-size: 12px; text-decoration: none; }
+    .api-row a:hover { text-decoration: underline; }
 
-    .api-row a {
-      color: var(--blue);
-      font-size: 12px;
-      text-decoration: none;
-    }
-
-    .api-row a:hover {
-      text-decoration: underline;
-    }
-
-    /* ─────────────────────────────────────────
-       UPLOAD ZONE
-    ───────────────────────────────────────── */
+    /* ── Upload zone ── */
     .upload-zone {
       border: 1.5px dashed var(--border2);
       border-radius: 10px;
@@ -188,25 +129,9 @@
       background: var(--bg2);
       margin-bottom: 20px;
     }
-
-    .upload-zone:hover,
-    .upload-zone.drag {
-      border-color: var(--accent);
-      background: rgba(245, 166, 35, 0.04);
-    }
-
-    .upload-zone.has-file {
-      border-style: solid;
-      border-color: var(--green);
-      background: rgba(62, 207, 142, 0.04);
-    }
-
-    .upload-icon {
-      font-size: 36px;
-      margin-bottom: 10px;
-      opacity: 0.35;
-    }
-
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(245,166,35,0.04); }
+    .upload-zone.has-file { border-style: solid; border-color: var(--green); background: rgba(62,207,142,0.04); }
+    .upload-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.35; }
     .upload-title {
       font-family: var(--font-display);
       font-size: 17px;
@@ -215,36 +140,12 @@
       text-transform: uppercase;
       margin-bottom: 5px;
     }
+    .upload-sub { font-size: 12px; color: var(--text2); }
+    .upload-info { font-size: 13px; color: var(--green); margin-top: 10px; font-weight: 500; }
 
-    .upload-sub {
-      font-size: 12px;
-      color: var(--text2);
-    }
-
-    .upload-info {
-      font-size: 13px;
-      color: var(--green);
-      margin-top: 10px;
-      font-weight: 500;
-    }
-
-    /* ─────────────────────────────────────────
-       CONFIG ROW (hero + rank)
-    ───────────────────────────────────────── */
-    .config-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    .config-block {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 18px;
-    }
-
+    /* ── Config row ── */
+    .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .config-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; }
     .config-label {
       font-size: 10px;
       font-weight: 600;
@@ -254,12 +155,10 @@
       margin-bottom: 7px;
     }
 
-    /* ─────────────────────────────────────────
-       ERROR BOX
-    ───────────────────────────────────────── */
+    /* ── Error ── */
     .error-box {
-      background: rgba(255, 77, 109, 0.08);
-      border: 1px solid rgba(255, 77, 109, 0.25);
+      background: rgba(255,77,109,0.08);
+      border: 1px solid rgba(255,77,109,0.25);
       border-radius: 7px;
       padding: 12px 16px;
       font-size: 13px;
@@ -267,14 +166,9 @@
       display: none;
       margin-bottom: 14px;
     }
+    .error-box.visible { display: block; }
 
-    .error-box.visible {
-      display: block;
-    }
-
-    /* ─────────────────────────────────────────
-       ANALYZE BUTTON
-    ───────────────────────────────────────── */
+    /* ── Analyze button ── */
     .analyze-btn {
       width: 100%;
       padding: 13px;
@@ -291,93 +185,29 @@
       transition: background 0.2s, transform 0.2s;
       margin-bottom: 24px;
     }
+    .analyze-btn:hover:not(:disabled) { background: #e8962a; transform: translateY(-1px); }
+    .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    .analyze-btn:hover:not(:disabled) {
-      background: #e8962a;
-      transform: translateY(-1px);
-    }
-
-    .analyze-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* ─────────────────────────────────────────
-       PROGRESS BAR
-    ───────────────────────────────────────── */
-    .progress-wrap {
-      display: none;
-      margin-bottom: 24px;
-    }
-
-    .progress-wrap.visible {
-      display: block;
-    }
-
-    .progress-track {
-      height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-
+    /* ── Progress ── */
+    .progress-wrap { display: none; margin-bottom: 24px; }
+    .progress-wrap.visible { display: block; }
+    .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
     .progress-bar {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--blue));
       width: 0%;
-      transition: width 0.4s;
+      transition: width 0.5s;
       border-radius: 2px;
     }
+    .progress-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+    .blink-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-    .progress-status {
-      font-size: 12px;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .blink-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.2; }
-    }
-
-    /* ─────────────────────────────────────────
-       RESULTS PANEL
-    ───────────────────────────────────────── */
-    .results {
-      display: none;
-    }
-
-    .results.visible {
-      display: block;
-    }
-
-    .results-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .results-title {
-      font-family: var(--font-display);
-      font-size: 19px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
+    /* ── Results ── */
+    .results { display: none; }
+    .results.visible { display: block; }
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .results-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
     .reset-btn {
       padding: 6px 14px;
       background: none;
@@ -389,15 +219,9 @@
       font-family: var(--font-body);
       transition: border-color 0.2s, color 0.2s;
     }
+    .reset-btn:hover { border-color: var(--text2); color: var(--text); }
 
-    .reset-btn:hover {
-      border-color: var(--text2);
-      color: var(--text);
-    }
-
-    /* ─────────────────────────────────────────
-       SUMMARY CARD
-    ───────────────────────────────────────── */
+    /* ── Summary ── */
     .summary-card {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -406,7 +230,6 @@
       padding: 16px 20px;
       margin-bottom: 20px;
     }
-
     .summary-card h3 {
       font-size: 10px;
       font-weight: 600;
@@ -415,103 +238,26 @@
       color: var(--accent);
       margin-bottom: 8px;
     }
+    .summary-text { font-size: 13px; line-height: 1.75; color: var(--text2); }
+    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
 
-    .summary-text {
-      font-size: 13px;
-      line-height: 1.75;
-      color: var(--text2);
-    }
+    /* ── Timestamps ── */
+    .ts-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    .ts-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; }
+    .ts-head:hover { background: rgba(255,255,255,0.02); }
+    .ts-time { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--accent); min-width: 48px; letter-spacing: 0.04em; }
+    .ts-category { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; }
+    .cat-death       { background: rgba(255,77,109,0.12);  color: var(--red);    border: 1px solid rgba(255,77,109,0.25); }
+    .cat-mistake     { background: rgba(245,166,35,0.10);  color: var(--accent); border: 1px solid rgba(245,166,35,0.20); }
+    .cat-good        { background: rgba(62,207,142,0.10);  color: var(--green);  border: 1px solid rgba(62,207,142,0.20); }
+    .cat-positioning { background: rgba(74,158,255,0.10);  color: var(--blue);   border: 1px solid rgba(74,158,255,0.20); }
+    .cat-ulti        { background: rgba(167,139,250,0.10); color: var(--purple); border: 1px solid rgba(167,139,250,0.20); }
+    .ts-title { font-size: 13px; font-weight: 500; flex: 1; color: var(--text); }
+    .ts-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
+    .ts-body { padding: 12px 16px; font-size: 13px; line-height: 1.7; color: var(--text2); border-top: 1px solid var(--border); display: none; }
+    .ts-body.open { display: block; }
 
-    /* ─────────────────────────────────────────
-       SECTION LABEL
-    ───────────────────────────────────────── */
-    .section-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 10px;
-    }
-
-    /* ─────────────────────────────────────────
-       TIMESTAMP ITEMS
-    ───────────────────────────────────────── */
-    .ts-item {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 10px;
-      overflow: hidden;
-    }
-
-    .ts-head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      cursor: pointer;
-    }
-
-    .ts-head:hover {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .ts-time {
-      font-family: var(--font-display);
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--accent);
-      min-width: 48px;
-      letter-spacing: 0.04em;
-    }
-
-    /* Category badge */
-    .ts-category {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 3px;
-    }
-
-    /* Add a new category here + in JS CATEGORIES config */
-    .cat-death       { background: rgba(255, 77, 109, 0.12); color: var(--red);    border: 1px solid rgba(255, 77, 109, 0.25); }
-    .cat-mistake     { background: rgba(245, 166, 35, 0.10); color: var(--accent); border: 1px solid rgba(245, 166, 35, 0.20); }
-    .cat-good        { background: rgba(62, 207, 142, 0.10); color: var(--green);  border: 1px solid rgba(62, 207, 142, 0.20); }
-    .cat-positioning { background: rgba(74, 158, 255, 0.10); color: var(--blue);   border: 1px solid rgba(74, 158, 255, 0.20); }
-    .cat-ulti        { background: rgba(167, 139, 250, 0.10); color: var(--purple); border: 1px solid rgba(167, 139, 250, 0.20); }
-
-    .ts-title {
-      font-size: 13px;
-      font-weight: 500;
-      flex: 1;
-      color: var(--text);
-    }
-
-    .ts-chevron {
-      font-size: 12px;
-      color: var(--text3);
-      transition: transform 0.2s;
-    }
-
-    .ts-body {
-      padding: 12px 16px;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text2);
-      border-top: 1px solid var(--border);
-      display: none;
-    }
-
-    .ts-body.open {
-      display: block;
-    }
-
-    /* ─────────────────────────────────────────
-       PRIORITIES CARD
-    ───────────────────────────────────────── */
+    /* ── Priorities ── */
     .priorities-card {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -520,7 +266,6 @@
       padding: 16px 20px;
       margin-top: 20px;
     }
-
     .priorities-card h3 {
       font-size: 10px;
       font-weight: 600;
@@ -529,48 +274,27 @@
       color: var(--blue);
       margin-bottom: 12px;
     }
-
-    .priority-item {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 9px;
-    }
-
-    .priority-num {
-      font-family: var(--font-display);
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text3);
-      min-width: 18px;
-    }
-
-    .priority-text {
-      font-size: 13px;
-      line-height: 1.65;
-      color: var(--text2);
-    }
+    .priority-item { display: flex; gap: 10px; margin-bottom: 9px; }
+    .priority-num { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text3); min-width: 18px; }
+    .priority-text { font-size: 13px; line-height: 1.65; color: var(--text2); }
 
   </style>
 </head>
 <body>
 
-<!-- ─── HEADER ─────────────────────────────── -->
 <header class="header">
   <div class="logo">OW <span>/</span> VOD Analyzer</div>
-  <div class="badge">Local · Gemini 1.5 Pro</div>
+  <div class="badge">Client-side · Gemini</div>
 </header>
 
-<!-- ─── MAIN ───────────────────────────────── -->
 <main class="main">
 
-  <!-- API Key -->
   <div class="api-row">
     <label for="apiKey">Clé API Gemini</label>
-    <input type="password" id="apiKey" placeholder="AIza..." style="flex: 1">
+    <input type="password" id="apiKey" placeholder="AIza..." style="flex:1">
     <a href="https://aistudio.google.com/app/apikey" target="_blank">Obtenir une clé ↗</a>
   </div>
 
-  <!-- File upload -->
   <input type="file" id="fileInput" accept="video/*">
   <div class="upload-zone" id="uploadZone">
     <div class="upload-icon">🎬</div>
@@ -579,25 +303,20 @@
     <div class="upload-info" id="fileInfo"></div>
   </div>
 
-  <!-- Hero & Rank selects -->
   <div class="config-row">
     <div class="config-block">
       <div class="config-label">Personnage</div>
-      <select id="heroSelect" style="width: 100%"></select>
+      <select id="heroSelect" style="width:100%"></select>
     </div>
     <div class="config-block">
       <div class="config-label">Rank</div>
-      <select id="rankSelect" style="width: 100%"></select>
+      <select id="rankSelect" style="width:100%"></select>
     </div>
   </div>
 
-  <!-- Error -->
   <div class="error-box" id="errorBox"></div>
-
-  <!-- Trigger -->
   <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ Analyser la VOD</button>
 
-  <!-- Progress -->
   <div class="progress-wrap" id="progressWrap">
     <div class="progress-track">
       <div class="progress-bar" id="progressBar"></div>
@@ -608,21 +327,17 @@
     </div>
   </div>
 
-  <!-- Results -->
   <div class="results" id="results">
     <div class="results-header">
       <div class="results-title">Rapport de coaching</div>
       <button class="reset-btn" onclick="resetForm()">Nouvelle analyse</button>
     </div>
-
     <div class="summary-card">
       <h3>Résumé global</h3>
       <div class="summary-text" id="summaryText"></div>
     </div>
-
     <div class="section-label">Moments clés</div>
     <div id="timestampList"></div>
-
     <div class="priorities-card">
       <h3>Priorités à travailler</h3>
       <div id="priorityList"></div>
@@ -634,11 +349,11 @@
 <script>
 
   /* ─────────────────────────────────────────
-     CONFIG — edit here to customize
+     CONFIG
   ───────────────────────────────────────── */
 
-  // Ranks shown in the dropdown
-  // Source : image officielle Overwatch competitive ranks
+  const GEMINI_MODEL = 'gemini-2.5-flash'; // Modèle à changer ici si besoin
+
   const RANKS = [
     'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
     'Maître', 'Grand Maître', 'Champion', 'Top 500',
@@ -646,83 +361,73 @@
   const DEFAULT_RANK = 'Diamant';
   const DEFAULT_HERO = 'Tracer';
 
-  // Category metadata: key matches what Gemini returns
-  // To add a category: add an entry here + a .cat-<key> CSS rule above
+  // Pour ajouter une catégorie : ajouter ici + règle CSS .cat-xxx
   const CATEGORIES = {
-    death:       { label: 'Mort',        cssClass: 'cat-death' },
-    mistake:     { label: 'Erreur',      cssClass: 'cat-mistake' },
-    good:        { label: 'Bon moment',  cssClass: 'cat-good' },
-    positioning: { label: 'Position',    cssClass: 'cat-positioning' },
-    ulti:        { label: 'Ulti',        cssClass: 'cat-ulti' },
+    death:       { label: 'Mort',       cssClass: 'cat-death' },
+    mistake:     { label: 'Erreur',     cssClass: 'cat-mistake' },
+    good:        { label: 'Bon moment', cssClass: 'cat-good' },
+    positioning: { label: 'Position',   cssClass: 'cat-positioning' },
+    ulti:        { label: 'Ulti',       cssClass: 'cat-ulti' },
   };
 
-  // Progress steps shown during analysis
-  const PROGRESS_STEPS = [
-    { pct: 10, text: 'Envoi de la vidéo au serveur local...' },
-    { pct: 20, text: 'Upload vers Gemini... (peut prendre quelques minutes selon la taille)' },
-    { pct: 100, text: 'Analyse terminée !' },
-  ];
+  // Pour ajouter un héros : ajouter dans la bonne liste
+  const HEROES = {
+    Tank: [
+      'D.Va', 'Domina', 'Doomfist', 'Hazard', 'Junker Queen', 'Mauga',
+      'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston',
+      'Wrecking Ball', 'Zarya',
+    ],
+    Damage: [
+      'Anran', 'Ashe', 'Bastion', 'Cassidy', 'Echo', 'Emre', 'Freja',
+      'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Sierra',
+      'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn',
+      'Tracer', 'Vendetta', 'Venture', 'Widowmaker',
+    ],
+    Support: [
+      'Ana', 'Baptiste', 'Brigitte', 'Illari', 'Jetpack Cat', 'Juno',
+      'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Mizuki', 'Moira',
+      'Wuyang', 'Zenyatta',
+    ],
+  };
 
+  const HEROES_FLAT = Object.values(HEROES).flat();
 
   /* ─────────────────────────────────────────
-     STATE
+     INIT
   ───────────────────────────────────────── */
-  let selectedFile = null;
 
+  function initSelects() {
+    const rankSel = document.getElementById('rankSelect');
+    RANKS.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r; o.textContent = r;
+      if (r === DEFAULT_RANK) o.selected = true;
+      rankSel.appendChild(o);
+    });
 
-  /* ─────────────────────────────────────────
-     INIT — populate selects from server
-  ───────────────────────────────────────── */
-  function initRanks() {
-    const select = document.getElementById('rankSelect');
-    RANKS.forEach(rank => {
-      const option = document.createElement('option');
-      option.value = rank;
-      option.textContent = rank;
-      if (rank === DEFAULT_RANK) option.selected = true;
-      select.appendChild(option);
+    const heroSel = document.getElementById('heroSelect');
+    HEROES_FLAT.forEach(h => {
+      const o = document.createElement('option');
+      o.value = h; o.textContent = h;
+      if (h === DEFAULT_HERO) o.selected = true;
+      heroSel.appendChild(o);
     });
   }
 
-  async function initHeroes() {
-    const select = document.getElementById('heroSelect');
-    try {
-      const res = await fetch('/heroes');
-      const heroes = await res.json();
-      heroes.forEach(hero => {
-        const option = document.createElement('option');
-        option.value = hero;
-        option.textContent = hero;
-        if (hero === DEFAULT_HERO) option.selected = true;
-        select.appendChild(option);
-      });
-    } catch (e) {
-      console.error('Impossible de charger les héros :', e);
-    }
-  }
-
-  initRanks();
-  initHeroes();
-
+  initSelects();
 
   /* ─────────────────────────────────────────
      UPLOAD ZONE
   ───────────────────────────────────────── */
+
+  let selectedFile = null;
   const uploadZone = document.getElementById('uploadZone');
   const fileInput  = document.getElementById('fileInput');
 
   uploadZone.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => setFile(e.target.files[0]));
-
-  uploadZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadZone.classList.add('drag');
-  });
-
-  uploadZone.addEventListener('dragleave', () => {
-    uploadZone.classList.remove('drag');
-  });
-
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
   uploadZone.addEventListener('drop', e => {
     e.preventDefault();
     uploadZone.classList.remove('drag');
@@ -736,59 +441,154 @@
     uploadZone.classList.add('has-file');
   }
 
-
   /* ─────────────────────────────────────────
      UI HELPERS
   ───────────────────────────────────────── */
+
   function setProgress(pct, text) {
     document.getElementById('progressBar').style.width = pct + '%';
     document.getElementById('progressStatus').textContent = text;
   }
-
   function showError(msg) {
-    const box = document.getElementById('errorBox');
-    box.textContent = msg;
-    box.classList.add('visible');
+    const b = document.getElementById('errorBox');
+    b.textContent = msg; b.classList.add('visible');
   }
+  function hideError() { document.getElementById('errorBox').classList.remove('visible'); }
+  function showProgress() { document.getElementById('progressWrap').classList.add('visible'); }
+  function hideProgress() { document.getElementById('progressWrap').classList.remove('visible'); }
+  function showResults() { document.getElementById('results').classList.add('visible'); }
+  function hideResults() { document.getElementById('results').classList.remove('visible'); }
 
-  function hideError() {
-    document.getElementById('errorBox').classList.remove('visible');
-  }
-
-  function showProgress() {
-    document.getElementById('progressWrap').classList.add('visible');
-  }
-
-  function hideProgress() {
-    document.getElementById('progressWrap').classList.remove('visible');
-  }
-
-  function showResults() {
-    document.getElementById('results').classList.add('visible');
-  }
-
-  function hideResults() {
-    document.getElementById('results').classList.remove('visible');
-  }
-
-
-  /* ─────────────────────────────────────────
-     RESET
-  ───────────────────────────────────────── */
   function resetForm() {
     selectedFile = null;
     fileInput.value = '';
     document.getElementById('fileInfo').textContent = '';
     uploadZone.classList.remove('has-file');
-    hideResults();
-    hideProgress();
-    hideError();
+    hideResults(); hideProgress(); hideError();
   }
 
+  /* ─────────────────────────────────────────
+     GEMINI FILES API — upload direct depuis le navigateur
+  ───────────────────────────────────────── */
+
+  const BASE = 'https://generativelanguage.googleapis.com';
+
+  async function uploadToGemini(apiKey, file) {
+    // 1. Initier un upload resumable
+    const initRes = await fetch(
+      `${BASE}/upload/v1beta/files?uploadType=resumable&key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Upload-Protocol': 'resumable',
+          'X-Goog-Upload-Command': 'start',
+          'X-Goog-Upload-Header-Content-Length': file.size,
+          'X-Goog-Upload-Header-Content-Type': file.type,
+        },
+        body: JSON.stringify({ file: { display_name: file.name } }),
+      }
+    );
+
+    if (!initRes.ok) {
+      const err = await initRes.json();
+      throw new Error(err.error?.message || 'Erreur init upload');
+    }
+
+    const uploadUrl = initRes.headers.get('X-Goog-Upload-URL');
+    if (!uploadUrl) throw new Error('URL upload introuvable dans la réponse');
+
+    // 2. Uploader le fichier
+    setProgress(30, `Upload en cours… (${(file.size/1024/1024).toFixed(0)} Mo)`);
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Length': file.size,
+        'X-Goog-Upload-Offset': '0',
+        'X-Goog-Upload-Command': 'upload, finalize',
+      },
+      body: file,
+    });
+
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json();
+      throw new Error(err.error?.message || 'Erreur upload fichier');
+    }
+
+    const fileData = await uploadRes.json();
+    return fileData.file; // { name, uri, state, ... }
+  }
+
+  async function waitForActive(apiKey, fileName) {
+    setProgress(55, 'Traitement de la vidéo par Gemini…');
+    for (let i = 0; i < 30; i++) {
+      const res  = await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`);
+      const data = await res.json();
+      if (data.state === 'ACTIVE') return data;
+      if (data.state === 'FAILED') throw new Error('Traitement vidéo échoué côté Gemini');
+      await new Promise(r => setTimeout(r, 3000));
+    }
+    throw new Error('Timeout — la vidéo met trop longtemps à traiter');
+  }
+
+  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
+    setProgress(75, 'Analyse IA en cours…');
+
+    const prompt = `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
+
+Le joueur joue ${hero} en ranked ${rank}.
+
+Réponds UNIQUEMENT en JSON valide sans markdown ni backticks, avec cette structure :
+{
+  "summary": "résumé global du gameplay en 3-4 phrases, points forts et points faibles",
+  "timestamps": [
+    {
+      "time": "MM:SS",
+      "category": "death|mistake|good|positioning|ulti",
+      "title": "titre court du moment",
+      "description": "analyse détaillée de ce moment et conseil concret adapté au niveau ${rank}"
+    }
+  ],
+  "priorities": ["priorité 1 à travailler", "priorité 2", "priorité 3"]
+}
+
+Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au niveau ${rank} sur ${hero}.`;
+
+    const res = await fetch(
+      `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { file_data: { file_uri: fileUri, mime_type: fileMime } },
+              { text: prompt },
+            ],
+          }],
+        }),
+      }
+    );
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const raw = data.candidates[0].content.parts[0].text
+      .replace(/```json|```/g, '').trim();
+    return JSON.parse(raw);
+  }
+
+  async function deleteFile(apiKey, fileName) {
+    try {
+      await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`, { method: 'DELETE' });
+    } catch {}
+  }
 
   /* ─────────────────────────────────────────
-     ANALYZE — main action
+     ANALYZE — action principale
   ───────────────────────────────────────── */
+
   async function analyze() {
     hideError();
 
@@ -804,52 +604,43 @@
     showProgress();
     hideResults();
 
+    let uploadedFileName = null;
+
     try {
-      setProgress(PROGRESS_STEPS[0].pct, PROGRESS_STEPS[0].text);
+      setProgress(10, 'Connexion à Gemini…');
 
-      const form = new FormData();
-      form.append('api_key', apiKey);
-      form.append('hero', hero);
-      form.append('rank', rank);
-      form.append('video', selectedFile);
+      const fileInfo = await uploadToGemini(apiKey, selectedFile);
+      uploadedFileName = fileInfo.name;
 
-      setProgress(PROGRESS_STEPS[1].pct, PROGRESS_STEPS[1].text);
+      const activeFile = await waitForActive(apiKey, fileInfo.name);
+      const parsed = await generateAnalysis(apiKey, activeFile.uri, selectedFile.type, hero, rank);
 
-      const res  = await fetch('/analyze', { method: 'POST', body: form });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Erreur serveur');
-
-      setProgress(PROGRESS_STEPS[2].pct, PROGRESS_STEPS[2].text);
-      renderResults(data);
+      setProgress(100, 'Analyse terminée !');
+      renderResults(parsed);
 
     } catch (err) {
       showError('Erreur : ' + err.message);
       hideProgress();
     } finally {
       btn.disabled = false;
+      if (uploadedFileName) deleteFile(apiKey, uploadedFileName);
     }
   }
-
 
   /* ─────────────────────────────────────────
      RENDER RESULTS
   ───────────────────────────────────────── */
+
   function renderResults(data) {
-    renderSummary(data.summary);
+    document.getElementById('summaryText').textContent = data.summary || '';
     renderTimestamps(data.timestamps || []);
     renderPriorities(data.priorities || []);
     hideProgress();
     showResults();
   }
 
-  function renderSummary(text) {
-    document.getElementById('summaryText').textContent = text || '';
-  }
-
   function renderTimestamps(timestamps) {
-    const container = document.getElementById('timestampList');
-    container.innerHTML = timestamps.map((ts, i) => {
+    document.getElementById('timestampList').innerHTML = timestamps.map((ts, i) => {
       const cat = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
       return `
         <div class="ts-item">
@@ -860,30 +651,22 @@
             <div class="ts-chevron" id="chev-${i}">▼</div>
           </div>
           <div class="ts-body" id="body-${i}">${ts.description}</div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   }
 
   function renderPriorities(priorities) {
-    const container = document.getElementById('priorityList');
-    container.innerHTML = priorities.map((text, i) => `
+    document.getElementById('priorityList').innerHTML = priorities.map((text, i) => `
       <div class="priority-item">
         <div class="priority-num">${i + 1}.</div>
         <div class="priority-text">${text}</div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
-
-  /* ─────────────────────────────────────────
-     TIMESTAMP ACCORDION
-  ───────────────────────────────────────── */
   function toggleTimestamp(index) {
     const body    = document.getElementById(`body-${index}`);
     const chevron = document.getElementById(`chev-${index}`);
-    const isOpen  = body.classList.toggle('open');
-    chevron.textContent = isOpen ? '▲' : '▼';
+    chevron.textContent = body.classList.toggle('open') ? '▲' : '▼';
   }
 
 </script>
