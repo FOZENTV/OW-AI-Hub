@@ -2,61 +2,77 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW Coach - Diagnostic Mode</title>
+    <title>OW AI Coach - Final Fix</title>
     <style>
         body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
-        .box { max-width: 500px; margin: auto; background: #2a2a2a; padding: 25px; border-radius: 12px; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        .card { max-width: 450px; margin: auto; background: #222; padding: 20px; border-radius: 15px; border: 1px solid #444; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
+        input { background: #000; color: white; border: 1px solid #555; }
         button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; }
-        #log { text-align: left; background: #000; padding: 15px; font-size: 0.8em; color: #0f0; margin-top: 20px; border-radius: 5px; height: 200px; overflow-y: auto; }
+        #drop-zone { border: 2px dashed #4096ee; padding: 30px; margin: 15px 0; border-radius: 10px; cursor: pointer; }
+        #res { text-align: left; background: #111; padding: 15px; margin-top: 20px; border-radius: 5px; display: none; white-space: pre-wrap; font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2>DIAGNOSTIC GEMINI</h2>
-        <input type="password" id="apiKey" placeholder="Colle ta clé API ici">
-        <button id="diagBtn">🔍 TESTER LA CONNEXION</button>
-        <div id="log">En attente de test...</div>
+
+    <div class="card">
+        <h2 style="color:#fa9c1e;">OW COACH AI</h2>
+        <input type="password" id="key" placeholder="Clé API Gemini">
+        <div id="drop-zone">DÉPOSE TA VOD ICI</div>
+        <button id="go">LANCER L'ANALYSE</button>
+        <div id="status" style="display:none; color:#4096ee;">⏳ Connexion aux serveurs...</div>
+        <div id="res"></div>
     </div>
 
 <script>
-    const logger = document.getElementById('log');
-    function log(msg) { logger.innerHTML += "> " + msg + "<br>"; }
+    let file = null;
+    document.getElementById('drop-zone').ondragover = (e) => e.preventDefault();
+    document.getElementById('drop-zone').ondrop = (e) => {
+        e.preventDefault();
+        file = e.dataTransfer.files[0];
+        document.getElementById('drop-zone').innerText = "✅ " + file.name;
+    };
 
-    document.getElementById('diagBtn').onclick = async () => {
-        const key = document.getElementById('apiKey').value.trim();
-        if (!key) return alert("Mets ta clé !");
-        
-        logger.innerHTML = "";
-        log("Démarrage du diagnostic...");
+    document.getElementById('go').onclick = async () => {
+        const apiKey = document.getElementById('key').value.trim();
+        if (!apiKey || !file) return alert("Clé ou vidéo manquante !");
 
-        // Liste des modèles à tester
-        const models = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro"];
+        document.getElementById('status').style.display = 'block';
+        document.getElementById('res').style.display = 'none';
 
-        for (let m of models) {
-            log(`Test du modèle : ${m}...`);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = async () => {
+            const base64 = reader.result.split(',')[1];
+            
+            // UTILISATION DE L'ENDPOINT V1 (STABLE) - Très important pour l'Europe
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
-                const resp = await fetch(url, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Coucou" }] }] })
+                    body: JSON.stringify({
+                        contents: [{ parts: [
+                            { text: "Tu es un coach Overwatch. Analyse ce gameplay." },
+                            { inline_data: { mime_type: "video/mp4", data: base64 } }
+                        ]}]
+                    })
                 });
-                const data = await resp.json();
+
+                const data = await response.json();
+                document.getElementById('status').style.display = 'none';
 
                 if (data.error) {
-                    log(`❌ Échec (${m}): ${data.error.message}`);
+                    document.getElementById('res').innerHTML = `<b style="color:red;">Erreur :</b> ${data.error.message}`;
                 } else {
-                    log(`✅ SUCCÈS avec ${m} !`);
-                    alert(`Ça marche avec ${m} ! Utilise ce nom dans ton code.`);
-                    return;
+                    document.getElementById('res').innerText = data.candidates[0].content.parts[0].text;
                 }
+                document.getElementById('res').style.display = 'block';
             } catch (e) {
-                log(`❌ Erreur réseau pour ${m}`);
+                alert("Erreur réseau : " + e.message);
             }
-        }
-        log("--- DIAGNOSTIC TERMINÉ ---");
-        log("Si tout est en rouge, ton compte Google bloque l'accès.");
+        };
     };
 </script>
 </body>
