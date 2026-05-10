@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW Coach AI - Final Fix</title>
+    <title>OW Coach AI - Fixed</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
@@ -28,7 +28,7 @@
     </div>
 
     <div class="card">
-        <h1 style="color:var(--ow-orange); margin-top:0;">OW COACH AI</h1>
+        <h1 style="color:var(--ow-orange); margin-top:0;">OW COACH AI - STABLE</h1>
         
         <div class="grid">
             <div>
@@ -57,7 +57,7 @@
         <textarea id="notes" rows="3" placeholder="Tes notes..."></textarea>
         <br><br>
         <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE</button>
-        <div id="loader" class="loading">⏳ ANALYSE EN COURS (Gemini 2.0 Flash)...</div>
+        <div id="loader" class="loading">⏳ ANALYSE EN COURS (Connexion Gemini Flash)...</div>
         <div id="ai-response"></div>
     </div>
 </div>
@@ -93,8 +93,8 @@
         try {
             const genAI = new GoogleGenerativeAI(key);
             
-            // MODÈLE STABLE 2026 : gemini-2.0-flash
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            // UTILISATION DU MODÈLE LE PLUS STABLE POUR ÉVITER LA 404
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const base64Video = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -102,7 +102,8 @@
                 reader.readAsDataURL(videoBlob);
             });
 
-            const prompt = `Tu es un coach Top 500 Overwatch. Analyse ce gameplay de ${document.getElementById('hero').value} (${document.getElementById('rank').value}). Feedback détaillé en français : Placement, CD, Target Priority.`;
+            const prompt = `Tu es un coach professionnel d'Overwatch 2 (Top 500). Analyse ce gameplay de ${document.getElementById('hero').value} au rang ${document.getElementById('rank').value}. 
+            Fais un retour ultra détaillé en français sur : Placement, gestion des ressources, Target Priority et Timing.`;
 
             const result = await model.generateContent([
                 prompt,
@@ -116,9 +117,8 @@
 
         } catch (error) {
             loader.style.display = 'none';
-            console.error("Détails:", error);
-            // Si le 404 revient, on tente le fallback automatique vers 1.5-flash
-            alert("Erreur détectée. Si c'est une 404, ton compte n'a peut-être pas encore accès au modèle 2.0. Vérifie tes accès sur AI Studio.");
+            console.error(error);
+            alert("Erreur : " + error.message + "\n\nConseil : Vérifie que ta clé API est valide sur AI Studio.");
         }
     };
 </script>
