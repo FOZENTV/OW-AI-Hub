@@ -396,7 +396,11 @@
      INIT
   ───────────────────────────────────────── */
 
+  // Icône par classe pour le optgroup
+  const CLASS_ICONS = { Tank: '🛡️ Tank', Damage: '⚔️ Damage', Support: '💚 Support' };
+
   function initSelects() {
+    // ── Rangs ──
     const rankSel = document.getElementById('rankSelect');
     RANKS.forEach(r => {
       const o = document.createElement('option');
@@ -405,12 +409,21 @@
       rankSel.appendChild(o);
     });
 
+    // ── Héros : groupés par classe, triés alphabétiquement dans chaque groupe ──
     const heroSel = document.getElementById('heroSelect');
-    HEROES_FLAT.forEach(h => {
-      const o = document.createElement('option');
-      o.value = h; o.textContent = h;
-      if (h === DEFAULT_HERO) o.selected = true;
-      heroSel.appendChild(o);
+    Object.entries(HEROES).forEach(([className, heroes]) => {
+      const group = document.createElement('optgroup');
+      group.label = CLASS_ICONS[className] || className;
+
+      // Tri alphabétique dans le groupe
+      [...heroes].sort((a, b) => a.localeCompare(b, 'fr')).forEach(h => {
+        const o = document.createElement('option');
+        o.value = h; o.textContent = h;
+        if (h === DEFAULT_HERO) o.selected = true;
+        group.appendChild(o);
+      });
+
+      heroSel.appendChild(group);
     });
   }
 
