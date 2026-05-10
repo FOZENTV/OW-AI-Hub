@@ -2,95 +2,61 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Overwatch Coach AI - Fix Final</title>
+    <title>OW Coach - Diagnostic Mode</title>
     <style>
         body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
-        .box { max-width: 500px; margin: auto; background: #2a2a2a; padding: 25px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
-        input { background: #000; color: white; border: 1px solid #444; }
-        button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        button:hover { background: #ff7b00; }
-        #drop-zone { border: 2px dashed #4096ee; padding: 40px; margin: 15px 0; border-radius: 10px; cursor: pointer; background: rgba(64, 150, 238, 0.05); }
-        #response { text-align: left; background: #111; padding: 15px; margin-top: 20px; border-radius: 5px; display: none; white-space: pre-wrap; border-left: 4px solid #fa9c1e; }
-        #loading { display: none; color: #4096ee; font-weight: bold; margin: 10px; }
+        .box { max-width: 500px; margin: auto; background: #2a2a2a; padding: 25px; border-radius: 12px; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        button { background: #fa9c1e; color: white; font-weight: bold; cursor: pointer; }
+        #log { text-align: left; background: #000; padding: 15px; font-size: 0.8em; color: #0f0; margin-top: 20px; border-radius: 5px; height: 200px; overflow-y: auto; }
     </style>
 </head>
 <body>
-
     <div class="box">
-        <h2 style="color:#fa9c1e; margin-top:0;">OW COACH AI</h2>
-        <p style="font-size: 0.8em; color: #888;">Si ça met 404, ton compte Google n'est pas encore prêt.</p>
-        
-        <input type="password" id="apiKey" placeholder="Colle ta clé API Gemini">
-        
-        <div id="drop-zone"><b>GLISSE TA VOD MP4 ICI</b></div>
-        
-        <button id="runBtn">🚀 ANALYSER LE GAMEPLAY</button>
-        <div id="loading">⏳ Analyse en cours (Envoi des données)...</div>
-        <div id="response"></div>
+        <h2>DIAGNOSTIC GEMINI</h2>
+        <input type="password" id="apiKey" placeholder="Colle ta clé API ici">
+        <button id="diagBtn">🔍 TESTER LA CONNEXION</button>
+        <div id="log">En attente de test...</div>
     </div>
 
 <script>
-    let videoBlob = null;
-    const dz = document.getElementById('drop-zone');
+    const logger = document.getElementById('log');
+    function log(msg) { logger.innerHTML += "> " + msg + "<br>"; }
 
-    // Gestion du fichier
-    dz.ondragover = (e) => e.preventDefault();
-    dz.ondrop = (e) => {
-        e.preventDefault();
-        videoBlob = e.dataTransfer.files[0];
-        dz.innerHTML = "✅ Vidéo prête : " + videoBlob.name;
-        dz.style.borderColor = "#fa9c1e";
-    };
-
-    document.getElementById('runBtn').onclick = async () => {
+    document.getElementById('diagBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value.trim();
-        if (!key || !videoBlob) return alert("Manque la clé ou la vidéo !");
-
-        const loading = document.getElementById('loading');
-        const responseBox = document.getElementById('response');
+        if (!key) return alert("Mets ta clé !");
         
-        loading.style.display = 'block';
-        responseBox.style.display = 'none';
+        logger.innerHTML = "";
+        log("Démarrage du diagnostic...");
 
-        try {
-            const reader = new FileReader();
-            reader.readAsDataURL(videoBlob);
-            reader.onloadend = async () => {
-                const base64Data = reader.result.split(',')[1];
+        // Liste des modèles à tester
+        const models = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro"];
 
-                // On utilise le modèle "flash-8b" qui est souvent activé plus vite que le "flash" normal
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${key}`;
-
-                const payload = {
-                    contents: [{
-                        parts: [
-                            { text: "Tu es un coach Overwatch Top 500. Analyse ce gameplay en français." },
-                            { inline_data: { mime_type: "video/mp4", data: base64Data } }
-                        ]
-                    }]
-                };
-
-                const response = await fetch(url, {
+        for (let m of models) {
+            log(`Test du modèle : ${m}...`);
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+                const resp = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Coucou" }] }] })
                 });
-
-                const data = await response.json();
-                loading.style.display = 'none';
+                const data = await resp.json();
 
                 if (data.error) {
-                    responseBox.innerHTML = `<b style="color:red;">Erreur ${data.error.code} :</b> ${data.error.message}`;
+                    log(`❌ Échec (${m}): ${data.error.message}`);
                 } else {
-                    responseBox.innerText = data.candidates[0].content.parts[0].text;
+                    log(`✅ SUCCÈS avec ${m} !`);
+                    alert(`Ça marche avec ${m} ! Utilise ce nom dans ton code.`);
+                    return;
                 }
-                responseBox.style.display = 'block';
-            };
-        } catch (err) {
-            loading.style.display = 'none';
-            alert("Erreur réseau : " + err.message);
+            } catch (e) {
+                log(`❌ Erreur réseau pour ${m}`);
+            }
         }
+        log("--- DIAGNOSTIC TERMINÉ ---");
+        log("Si tout est en rouge, ton compte Google bloque l'accès.");
     };
 </script>
 </body>
