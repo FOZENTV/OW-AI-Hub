@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW AI Coaching Hub - V3</title>
+    <title>OW Coach AI - Final Fix</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
@@ -12,11 +12,11 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.8em; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #0b0c10; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; cursor: pointer; transition: 0.3s; }
+        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; cursor: pointer; }
         video { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
-        .analyze-btn { background: linear-gradient(90deg, #fa9c1e, #ff6b00); color: white; border: none; padding: 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.2em; text-transform: uppercase; }
+        .analyze-btn { background: var(--ow-orange); color: white; border: none; padding: 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.2em; text-transform: uppercase; }
         #ai-response { margin-top: 20px; padding: 25px; background: #12141d; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; line-height: 1.6; color: #eee; }
-        .loading { display: none; text-align: center; color: var(--ow-blue); font-weight: bold; padding: 20px; border: 1px solid var(--ow-blue); border-radius: 8px; margin-top: 20px; }
+        .loading { display: none; text-align: center; color: var(--ow-blue); font-weight: bold; padding: 20px; }
     </style>
 </head>
 <body>
@@ -28,7 +28,7 @@
     </div>
 
     <div class="card">
-        <h1 style="color:var(--ow-orange); margin-top:0;">OW AI COACHING - NEXT GEN</h1>
+        <h1 style="color:var(--ow-orange); margin-top:0;">OW COACH AI</h1>
         
         <div class="grid">
             <div>
@@ -54,10 +54,10 @@
         </div>
 
         <div id="drop-zone"><b>GLISSE TA VOD ICI</b><video id="vPlayer" controls></video></div>
-        <textarea id="notes" rows="3" placeholder="Notes pour le coach..."></textarea>
+        <textarea id="notes" rows="3" placeholder="Tes notes..."></textarea>
         <br><br>
         <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE</button>
-        <div id="loader" class="loading">⏳ L'IA (Flash 2.0/3.0) ANALYSE TA VOD...</div>
+        <div id="loader" class="loading">⏳ ANALYSE EN COURS (Gemini 2.0 Flash)...</div>
         <div id="ai-response"></div>
     </div>
 </div>
@@ -83,7 +83,7 @@
 
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value;
-        if (!key || !videoBlob) return alert("Clé ou Vidéo manquante !");
+        if (!key || !videoBlob) return alert("Manque Clé ou Vidéo !");
 
         const loader = document.getElementById('loader');
         const responseBox = document.getElementById('ai-response');
@@ -93,9 +93,8 @@
         try {
             const genAI = new GoogleGenerativeAI(key);
             
-            // UTILISATION DU MODÈLE LE PLUS RÉCENT (2.0 Flash)
-            // Ce modèle remplace les anciennes versions beta et v1
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+            // MODÈLE STABLE 2026 : gemini-2.0-flash
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const base64Video = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -103,8 +102,7 @@
                 reader.readAsDataURL(videoBlob);
             });
 
-            const prompt = `Tu es un coach professionnel d'Overwatch 2 (Top 500). Analyse ce gameplay de ${document.getElementById('hero').value} au rang ${document.getElementById('rank').value}. 
-            Fais un retour hyper détaillé en français sur le placement, la gestion des ressources, la priorité des cibles et le timing.`;
+            const prompt = `Tu es un coach Top 500 Overwatch. Analyse ce gameplay de ${document.getElementById('hero').value} (${document.getElementById('rank').value}). Feedback détaillé en français : Placement, CD, Target Priority.`;
 
             const result = await model.generateContent([
                 prompt,
@@ -114,12 +112,13 @@
             const response = await result.response;
             loader.style.display = 'none';
             responseBox.style.display = 'block';
-            responseBox.innerHTML = `<h2>🎙️ FEEDBACK DU COACH</h2><br>` + response.text().replace(/\n/g, '<br>');
+            responseBox.innerHTML = `<h2>🎙️ ANALYSE COACHING</h2><br>` + response.text().replace(/\n/g, '<br>');
 
         } catch (error) {
             loader.style.display = 'none';
-            alert("Erreur : " + error.message);
-            console.error("Détails de l'erreur:", error);
+            console.error("Détails:", error);
+            // Si le 404 revient, on tente le fallback automatique vers 1.5-flash
+            alert("Erreur détectée. Si c'est une 404, ton compte n'a peut-être pas encore accès au modèle 2.0. Vérifie tes accès sur AI Studio.");
         }
     };
 </script>
