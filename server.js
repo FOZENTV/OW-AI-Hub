@@ -70,10 +70,15 @@ Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au 
 // ─────────────────────────────────────────
 
 const app    = express();
-const upload = multer({ storage: multer.memoryStorage() }); // vidéo en RAM, pas sur disque
+// Taille max upload : 2 Go
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 },
+});
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(__dirname)); // sert ow_vod_analyzer.html
 
 // ── Routes ──────────────────────────────
