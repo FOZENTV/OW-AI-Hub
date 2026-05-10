@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>OW Coach AI - Ultimate Fix</title>
+    <title>Overwatch AI Agent - PRO</title>
     <style>
         :root { --ow-orange: #fa9c1e; --ow-blue: #4096ee; --bg: #0b0c10; --card: #1a1c23; --text: #f0f0f0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
@@ -12,119 +12,127 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #aaa; font-size: 0.8em; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #0b0c10; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; cursor: pointer; }
+        #drop-zone { border: 2px dashed var(--ow-blue); padding: 30px; text-align: center; border-radius: 12px; margin: 20px 0; }
         video { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
-        .analyze-btn { background: var(--ow-orange); color: white; border: none; padding: 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.2em; text-transform: uppercase; }
-        #ai-response { margin-top: 20px; padding: 25px; background: #12141d; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; line-height: 1.6; color: #eee; }
-        .loading { display: none; text-align: center; color: var(--ow-blue); font-weight: bold; padding: 20px; border: 1px solid var(--ow-blue); border-radius: 8px; margin-top: 20px; }
+        .analyze-btn { background: var(--ow-orange); color: white; border: none; padding: 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1em; text-transform: uppercase; }
+        #ai-response { margin-top: 20px; padding: 20px; background: #12141d; border-left: 4px solid var(--ow-orange); display: none; white-space: pre-wrap; line-height: 1.6; }
+        .loading { color: var(--ow-blue); font-weight: bold; display: none; margin: 15px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="api-section">
-        <label>🔑 CLÉ API GEMINI (AI Studio)</label>
+        <label>🔑 Gemini API Key</label>
         <input type="password" id="apiKey" placeholder="Colle ta clé API ici...">
     </div>
 
     <div class="card">
-        <h1 style="color:var(--ow-orange); margin-top:0;">OW COACH AI - STABLE V3</h1>
-        
         <div class="grid">
             <div>
                 <label>Héros</label>
                 <select id="hero">
                     <optgroup label="🛡️ TANK">
-                        <option>D.Va</option><option>Doomfist</option><option>Hazard</option><option>Junker Queen</option><option>Mauga</option><option>Orisa</option><option>Ramattra</option><option>Reinhardt</option><option>Roadhog</option><option>Sigma</option><option>Winston</option><option>Wrecking Ball</option><option>Zarya</option>
+                        <option>D.Va</option><option>Doomfist</option><option>Reinhardt</option><option>Winston</option><option>Zarya</option>
                     </optgroup>
                     <optgroup label="⚔️ DAMAGE">
-                        <option>Ashe</option><option>Bastion</option><option>Cassidy</option><option>Echo</option><option>Genji</option><option>Hanzo</option><option>Junkrat</option><option>Mei</option><option>Pharah</option><option>Reaper</option><option>Sojourn</option><option>Soldier: 76</option><option>Sombra</option><option>Symmetra</option><option>Torbjörn</option><option>Tracer</option><option>Venture</option><option>Widowmaker</option>
+                        <option>Genji</option><option>Soldier: 76</option><option>Sombra</option><option>Tracer</option><option>Widowmaker</option>
                     </optgroup>
                     <optgroup label="✚ SUPPORT">
-                        <option>Ana</option><option>Baptiste</option><option>Brigitte</option><option>Illari</option><option>Juno</option><option>Kiriko</option><option>Lifeweaver</option><option>Lúcio</option><option>Mercy</option><option>Moira</option><option>Zenyatta</option>
+                        <option>Ana</option><option>Kiriko</option><option>Lúcio</option><option>Mercy</option><option>Moira</option>
                     </optgroup>
                 </select>
             </div>
             <div>
                 <label>Rang</label>
                 <select id="rank">
-                    <option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option><option>Champion</option><option>Top 500</option>
+                    <option>Bronze</option><option>Gold</option><option>Platinum</option><option>Diamond</option><option>Master</option><option>Grandmaster</option>
                 </select>
             </div>
         </div>
 
-        <div id="drop-zone"><b>GLISSE TA VOD ICI</b><video id="vPlayer" controls></video></div>
-        <textarea id="notes" rows="3" placeholder="Notes (ex: mes morts, mon ult...)"></textarea>
-        <br><br>
-        <button class="analyze-btn" id="runBtn">🚀 ANALYSER LE GAMEPLAY</button>
-        <div id="loader" class="loading">⏳ LE COACH ANALYSE LA VIDÉO... (30-60s)</div>
+        <div id="drop-zone">
+            <b id="dz-text">GLISSE TA VOD ICI</b>
+            <video id="vPlayer" controls></video>
+        </div>
+
+        <textarea id="notes" rows="3" placeholder="Sur quoi le coach doit-il se concentrer ?"></textarea>
+        
+        <button class="analyze-btn" id="runBtn">🚀 LANCER L'ANALYSE IA</button>
+        <div id="loader" class="loading">⏳ L'IA analyse ton gameplay... patiente environ 1 minute.</div>
         <div id="ai-response"></div>
     </div>
 </div>
 
 <script type="module">
+    // C'est cet import qui permet à l'IA de "parler" au code
     import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
     let videoBlob = null;
-    const dz = document.getElementById('drop-zone');
-    const vp = document.getElementById('vPlayer');
 
+    // Gestion du Drag & Drop
+    const dz = document.getElementById('drop-zone');
     dz.ondragover = (e) => e.preventDefault();
     dz.ondrop = (e) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
         if (file) {
             videoBlob = file;
-            vp.src = URL.createObjectURL(file);
-            vp.style.display = 'block';
-            dz.querySelector('b').style.display = 'none';
+            document.getElementById('vPlayer').src = URL.createObjectURL(file);
+            document.getElementById('vPlayer').style.display = 'block';
+            document.getElementById('dz-text').style.display = 'none';
         }
     };
 
+    // La VRAIE fonction d'analyse
     document.getElementById('runBtn').onclick = async () => {
         const key = document.getElementById('apiKey').value;
-        if (!key || !videoBlob) return alert("Manque Clé ou Vidéo !");
+        const hero = document.getElementById('hero').value;
+        const rank = document.getElementById('rank').value;
+        const notes = document.getElementById('notes').value;
+
+        if(!key || !videoBlob) return alert("Il manque la clé API ou la vidéo !");
 
         const loader = document.getElementById('loader');
         const responseBox = document.getElementById('ai-response');
+        
         loader.style.display = 'block';
         responseBox.style.display = 'none';
 
-        // Liste des modèles à tester par ordre de priorité
-        const modelNames = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro"];
-        let success = false;
+        try {
+            const genAI = new GoogleGenerativeAI(key);
+            // On utilise la version la plus stable pour la vidéo
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        for (let modelName of modelNames) {
-            if (success) break;
-            try {
-                const genAI = new GoogleGenerativeAI(key);
-                const model = genAI.getGenerativeModel({ model: modelName });
+            // Conversion de la vidéo pour l'envoi
+            const base64Video = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(videoBlob);
+            });
 
-                const base64Video = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                    reader.readAsDataURL(videoBlob);
-                });
+            const prompt = `Tu es un coach Top 500 d'Overwatch. Analyse ce gameplay de ${hero} au rang ${rank}. 
+            Notes du joueur : ${notes}. 
+            Fais un retour hyper détaillé en français sur le placement, les cooldowns et les cibles prioritaires.`;
 
-                const prompt = `Tu es un coach Top 500 Overwatch. Analyse ce gameplay de ${document.getElementById('hero').value} au rang ${document.getElementById('rank').value}. Fais un retour hyper détaillé en français sur le placement, la gestion des ressources, la priorité des cibles et le timing.`;
-
-                const result = await model.generateContent([
-                    prompt,
-                    { inlineData: { mimeType: videoBlob.type, data: base64Video } }
-                ]);
-
-                const response = await result.response;
-                loader.style.display = 'none';
-                responseBox.style.display = 'block';
-                responseBox.innerHTML = `<h2>🎙️ FEEDBACK DU COACH (${modelName})</h2><br>` + response.text().replace(/\n/g, '<br>');
-                success = true;
-            } catch (error) {
-                console.warn(`Échec avec ${modelName}:`, error);
-                if (modelName === modelNames[modelNames.length - 1]) {
-                    loader.style.display = 'none';
-                    alert("Erreur critique : Aucun modèle n'est accessible avec ta clé API. Vérifie que ta clé est bien une clé 'Gemini API' créée sur Google AI Studio.");
+            const result = await model.generateContent([
+                prompt,
+                {
+                    inlineData: {
+                        mimeType: videoBlob.type,
+                        data: base64Video
+                    }
                 }
-            }
+            ]);
+
+            const response = await result.response;
+            loader.style.display = 'none';
+            responseBox.style.display = 'block';
+            responseBox.innerHTML = `<h3>🎙️ COACHING TERMINÉ :</h3><br>` + response.text().replace(/\n/g, '<br>');
+
+        } catch (err) {
+            loader.style.display = 'none';
+            alert("Erreur API : " + err.message);
         }
     };
 </script>
