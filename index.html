@@ -1,259 +1,891 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OW VOD Analyzer</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500&display=swap');
-  :root{--bg:#0a0c10;--bg2:#0f1218;--bg3:#161b24;--border:#1e2530;--border2:#2a3342;--accent:#f5a623;--blue:#4a9eff;--green:#3ecf8e;--red:#ff4d6d;--text:#e8edf5;--text2:#8b95a8;--text3:#4a5568}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
-  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:999}
-  .header{padding:20px 32px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:14px}
-  .logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent)}
-  .logo span{color:var(--text3);font-weight:500}
-  .badge{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border2);border-radius:3px;color:var(--text3)}
-  .main{padding:28px 32px;max-width:900px;margin:0 auto}
-  .api-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px}
-  .api-row label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text2);white-space:nowrap}
-  input[type=password],select{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:7px 12px;font-size:13px;color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s}
-  input[type=password]:focus,select:focus{border-color:var(--accent)}
-  input[type=password]::placeholder{color:var(--text3)}
-  select option{background:var(--bg3)}
-  .upload-zone{border:1.5px dashed var(--border2);border-radius:10px;padding:40px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg2);margin-bottom:20px}
-  .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(245,166,35,0.04)}
-  .upload-zone.has{border-style:solid;border-color:var(--green);background:rgba(62,207,142,0.04)}
-  .upload-icon{font-size:36px;margin-bottom:10px;opacity:0.35}
-  .upload-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:5px}
-  .upload-sub{font-size:12px;color:var(--text2)}
-  .upload-info{font-size:13px;color:var(--green);margin-top:10px;font-weight:500}
-  .config-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
-  .config-block{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px}
-  .clabel{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
-  .analyze-btn{width:100%;padding:13px;background:var(--accent);border:none;border-radius:7px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0a0c10;cursor:pointer;transition:all 0.2s;margin-bottom:24px}
-  .analyze-btn:hover:not(:disabled){background:#e8962a;transform:translateY(-1px)}
-  .analyze-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-  .prog-wrap{display:none;margin-bottom:24px}
-  .prog-wrap.on{display:block}
-  .prog-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px}
-  .prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));width:0%;transition:width 0.4s;border-radius:2px}
-  .prog-status{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
-  .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1s infinite}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-  .err{background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.25);border-radius:7px;padding:12px 16px;font-size:13px;color:var(--red);display:none;margin-bottom:14px}
-  .err.on{display:block}
-  .results{display:none}.results.on{display:block}
-  .results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .results-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
-  .reset-btn{padding:6px 14px;background:none;border:1px solid var(--border2);border-radius:5px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
-  .reset-btn:hover{border-color:var(--text2);color:var(--text)}
-  .summary-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:20px}
-  .summary-card h3{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
-  .summary-text{font-size:13px;line-height:1.75;color:var(--text2)}
-  .sec-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
-  .ts-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden}
-  .ts-head{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer}
-  .ts-head:hover{background:rgba(255,255,255,0.02)}
-  .ts-time{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:var(--accent);min-width:48px;letter-spacing:0.04em}
-  .ts-cat{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;padding:2px 8px;border-radius:3px}
-  .cat-death{background:rgba(255,77,109,0.12);color:var(--red);border:1px solid rgba(255,77,109,0.25)}
-  .cat-mistake{background:rgba(245,166,35,0.1);color:var(--accent);border:1px solid rgba(245,166,35,0.2)}
-  .cat-good{background:rgba(62,207,142,0.1);color:var(--green);border:1px solid rgba(62,207,142,0.2)}
-  .cat-positioning{background:rgba(74,158,255,0.1);color:var(--blue);border:1px solid rgba(74,158,255,0.2)}
-  .cat-ulti{background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)}
-  .ts-title{font-size:13px;font-weight:500;flex:1;color:var(--text)}
-  .ts-chev{font-size:12px;color:var(--text3)}
-  .ts-body{padding:12px 16px;font-size:13px;line-height:1.7;color:var(--text2);border-top:1px solid var(--border);display:none}
-  .ts-body.open{display:block}
-  .prio-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:16px 20px;margin-top:20px}
-  .prio-card h3{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);margin-bottom:12px}
-  .prio-item{display:flex;gap:10px;margin-bottom:9px}
-  .prio-num{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text3);min-width:18px}
-  .prio-text{font-size:13px;line-height:1.65;color:var(--text2)}
-  input[type=file]{display:none}
-  a{color:var(--blue);font-size:12px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OW VOD Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+
+    /* ─────────────────────────────────────────
+       DESIGN TOKENS
+    ───────────────────────────────────────── */
+    :root {
+      --bg:       #0a0c10;
+      --bg2:      #0f1218;
+      --bg3:      #161b24;
+      --border:   #1e2530;
+      --border2:  #2a3342;
+      --accent:   #f5a623;
+      --blue:     #4a9eff;
+      --green:    #3ecf8e;
+      --red:      #ff4d6d;
+      --purple:   #a78bfa;
+      --text:     #e8edf5;
+      --text2:    #8b95a8;
+      --text3:    #4a5568;
+      --font-display: 'Rajdhani', sans-serif;
+      --font-body:    'Inter', sans-serif;
+    }
+
+    /* ─────────────────────────────────────────
+       RESET & BASE
+    ───────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    /* Subtle scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.025) 2px,
+        rgba(0, 0, 0, 0.025) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ─────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────── */
+    .header {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .logo span {
+      color: var(--text3);
+      font-weight: 500;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      color: var(--text3);
+    }
+
+    /* ─────────────────────────────────────────
+       LAYOUT
+    ───────────────────────────────────────── */
+    .main {
+      padding: 28px 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ─────────────────────────────────────────
+       FORM ELEMENTS
+    ───────────────────────────────────────── */
+    input[type="password"],
+    input[type="text"],
+    select {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      padding: 7px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      font-family: var(--font-body);
+      transition: border-color 0.2s;
+    }
+
+    input[type="password"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="password"]::placeholder {
+      color: var(--text3);
+    }
+
+    select option {
+      background: var(--bg3);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* ─────────────────────────────────────────
+       API KEY ROW
+    ───────────────────────────────────────── */
+    .api-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .api-row label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text2);
+      white-space: nowrap;
+    }
+
+    .api-row a {
+      color: var(--blue);
+      font-size: 12px;
+      text-decoration: none;
+    }
+
+    .api-row a:hover {
+      text-decoration: underline;
+    }
+
+    /* ─────────────────────────────────────────
+       UPLOAD ZONE
+    ───────────────────────────────────────── */
+    .upload-zone {
+      border: 1.5px dashed var(--border2);
+      border-radius: 10px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg2);
+      margin-bottom: 20px;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag {
+      border-color: var(--accent);
+      background: rgba(245, 166, 35, 0.04);
+    }
+
+    .upload-zone.has-file {
+      border-style: solid;
+      border-color: var(--green);
+      background: rgba(62, 207, 142, 0.04);
+    }
+
+    .upload-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+      opacity: 0.35;
+    }
+
+    .upload-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .upload-sub {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .upload-info {
+      font-size: 13px;
+      color: var(--green);
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    /* ─────────────────────────────────────────
+       CONFIG ROW (hero + rank)
+    ───────────────────────────────────────── */
+    .config-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .config-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .config-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 7px;
+    }
+
+    /* ─────────────────────────────────────────
+       ERROR BOX
+    ───────────────────────────────────────── */
+    .error-box {
+      background: rgba(255, 77, 109, 0.08);
+      border: 1px solid rgba(255, 77, 109, 0.25);
+      border-radius: 7px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--red);
+      display: none;
+      margin-bottom: 14px;
+    }
+
+    .error-box.visible {
+      display: block;
+    }
+
+    /* ─────────────────────────────────────────
+       ANALYZE BUTTON
+    ───────────────────────────────────────── */
+    .analyze-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 7px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0a0c10;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      margin-bottom: 24px;
+    }
+
+    .analyze-btn:hover:not(:disabled) {
+      background: #e8962a;
+      transform: translateY(-1px);
+    }
+
+    .analyze-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ─────────────────────────────────────────
+       PROGRESS BAR
+    ───────────────────────────────────────── */
+    .progress-wrap {
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    .progress-wrap.visible {
+      display: block;
+    }
+
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      width: 0%;
+      transition: width 0.4s;
+      border-radius: 2px;
+    }
+
+    .progress-status {
+      font-size: 12px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .blink-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    /* ─────────────────────────────────────────
+       RESULTS PANEL
+    ───────────────────────────────────────── */
+    .results {
+      display: none;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .results-title {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .reset-btn {
+      padding: 6px 14px;
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--text2);
+      color: var(--text);
+    }
+
+    /* ─────────────────────────────────────────
+       SUMMARY CARD
+    ───────────────────────────────────────── */
+    .summary-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card h3 {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .summary-text {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text2);
+    }
+
+    /* ─────────────────────────────────────────
+       SECTION LABEL
+    ───────────────────────────────────────── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    /* ─────────────────────────────────────────
+       TIMESTAMP ITEMS
+    ───────────────────────────────────────── */
+    .ts-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .ts-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+
+    .ts-head:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .ts-time {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 48px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Category badge */
+    .ts-category {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    /* Add a new category here + in JS CATEGORIES config */
+    .cat-death       { background: rgba(255, 77, 109, 0.12); color: var(--red);    border: 1px solid rgba(255, 77, 109, 0.25); }
+    .cat-mistake     { background: rgba(245, 166, 35, 0.10); color: var(--accent); border: 1px solid rgba(245, 166, 35, 0.20); }
+    .cat-good        { background: rgba(62, 207, 142, 0.10); color: var(--green);  border: 1px solid rgba(62, 207, 142, 0.20); }
+    .cat-positioning { background: rgba(74, 158, 255, 0.10); color: var(--blue);   border: 1px solid rgba(74, 158, 255, 0.20); }
+    .cat-ulti        { background: rgba(167, 139, 250, 0.10); color: var(--purple); border: 1px solid rgba(167, 139, 250, 0.20); }
+
+    .ts-title {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      color: var(--text);
+    }
+
+    .ts-chevron {
+      font-size: 12px;
+      color: var(--text3);
+      transition: transform 0.2s;
+    }
+
+    .ts-body {
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text2);
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+
+    .ts-body.open {
+      display: block;
+    }
+
+    /* ─────────────────────────────────────────
+       PRIORITIES CARD
+    ───────────────────────────────────────── */
+    .priorities-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--blue);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-top: 20px;
+    }
+
+    .priorities-card h3 {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    .priority-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .priority-num {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text3);
+      min-width: 18px;
+    }
+
+    .priority-text {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text2);
+    }
+
+  </style>
 </head>
 <body>
-<div class="header">
+
+<!-- ─── HEADER ─────────────────────────────── -->
+<header class="header">
   <div class="logo">OW <span>/</span> VOD Analyzer</div>
-  <div class="badge">Gemini · Cloudflare</div>
-</div>
-<div class="main">
+  <div class="badge">Local · Gemini 1.5 Pro</div>
+</header>
+
+<!-- ─── MAIN ───────────────────────────────── -->
+<main class="main">
+
+  <!-- API Key -->
   <div class="api-row">
-    <label>Clé API Gemini</label>
-    <input type="password" id="apiKey" placeholder="AIza..." style="flex:1">
+    <label for="apiKey">Clé API Gemini</label>
+    <input type="password" id="apiKey" placeholder="AIza..." style="flex: 1">
     <a href="https://aistudio.google.com/app/apikey" target="_blank">Obtenir une clé ↗</a>
   </div>
+
+  <!-- File upload -->
   <input type="file" id="fileInput" accept="video/*">
   <div class="upload-zone" id="uploadZone">
     <div class="upload-icon">🎬</div>
     <div class="upload-title">Dépose ta VOD ici</div>
-    <div class="upload-sub">MP4, MOV — jusqu'à 500 Mo</div>
+    <div class="upload-sub">MP4, MOV — jusqu'à 2 Go</div>
     <div class="upload-info" id="fileInfo"></div>
   </div>
+
+  <!-- Hero & Rank selects -->
   <div class="config-row">
     <div class="config-block">
-      <div class="clabel">Personnage</div>
-      <select id="heroSelect" style="width:100%">
-        <optgroup label="Tank">
-          <option>D.Va</option><option>Doomfist</option><option>Hazard</option>
-          <option>Junker Queen</option><option>Mauga</option><option>Orisa</option>
-          <option>Ramattra</option><option>Reinhardt</option><option>Roadhog</option>
-          <option>Sigma</option><option>Winston</option><option>Wrecking Ball</option><option>Zarya</option>
-        </optgroup>
-        <optgroup label="Damage">
-          <option>Ashe</option><option>Bastion</option><option>Cassidy</option>
-          <option>Echo</option><option>Freja</option><option>Genji</option>
-          <option>Hanzo</option><option>Junkrat</option><option>Mei</option>
-          <option>Pharah</option><option>Reaper</option><option>Sierra</option>
-          <option>Sojourn</option><option>Soldier: 76</option><option>Sombra</option>
-          <option>Symmetra</option><option>Torbjörn</option><option selected>Tracer</option>
-          <option>Venture</option><option>Widowmaker</option><option>Wuyang</option>
-        </optgroup>
-        <optgroup label="Support">
-          <option>Ana</option><option>Baptiste</option><option>Brigitte</option>
-          <option>Illari</option><option>Juno</option><option>Kiriko</option>
-          <option>Lifeweaver</option><option>Lúcio</option><option>Mercy</option>
-          <option>Moira</option><option>Zenyatta</option>
-        </optgroup>
-      </select>
+      <div class="config-label">Personnage</div>
+      <select id="heroSelect" style="width: 100%"></select>
     </div>
     <div class="config-block">
-      <div class="clabel">Rank</div>
-      <select id="rankSelect" style="width:100%">
-        <option>Bronze</option><option>Argent</option><option>Or</option>
-        <option>Platine</option><option selected>Diamant</option>
-        <option>Maître</option><option>Grand Maître</option>
-      </select>
+      <div class="config-label">Rank</div>
+      <select id="rankSelect" style="width: 100%"></select>
     </div>
   </div>
-  <div class="err" id="errBox"></div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Trigger -->
   <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ Analyser la VOD</button>
-  <div class="prog-wrap" id="progWrap">
-    <div class="prog-bg"><div class="prog-bar" id="progBar"></div></div>
-    <div class="prog-status"><div class="dot"></div><span id="progStatus">Chargement...</span></div>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-status">
+      <div class="blink-dot"></div>
+      <span id="progressStatus">Chargement...</span>
+    </div>
   </div>
+
+  <!-- Results -->
   <div class="results" id="results">
     <div class="results-header">
       <div class="results-title">Rapport de coaching</div>
-      <button class="reset-btn" onclick="reset()">Nouvelle analyse</button>
+      <button class="reset-btn" onclick="resetForm()">Nouvelle analyse</button>
     </div>
+
     <div class="summary-card">
       <h3>Résumé global</h3>
       <div class="summary-text" id="summaryText"></div>
     </div>
-    <div class="sec-label">Moments clés</div>
-    <div id="tsList"></div>
-    <div class="prio-card">
+
+    <div class="section-label">Moments clés</div>
+    <div id="timestampList"></div>
+
+    <div class="priorities-card">
       <h3>Priorités à travailler</h3>
-      <div id="prioList"></div>
+      <div id="priorityList"></div>
     </div>
   </div>
-</div>
+
+</main>
+
 <script>
-const WORKER_URL = "https://overwatchaihub.adriencorbeille123.workers.dev";
-let file = null;
-const zone = document.getElementById('uploadZone'), fi = document.getElementById('fileInput');
-zone.addEventListener('click', () => fi.click());
-fi.addEventListener('change', e => setFile(e.target.files[0]));
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag'); if(e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
-function setFile(f) { file=f; document.getElementById('fileInfo').textContent='✓ '+f.name+' — '+(f.size/1024/1024).toFixed(0)+' Mo'; zone.classList.add('has'); }
-function setProgress(pct,txt) { document.getElementById('progBar').style.width=pct+'%'; document.getElementById('progStatus').textContent=txt; }
-function showErr(msg) { const b=document.getElementById('errBox'); b.textContent=msg; b.classList.add('on'); }
-function hideErr() { document.getElementById('errBox').classList.remove('on'); }
-function reset() { file=null; fi.value=''; document.getElementById('fileInfo').textContent=''; zone.classList.remove('has'); document.getElementById('results').classList.remove('on'); document.getElementById('progWrap').classList.remove('on'); hideErr(); }
 
-async function analyze() {
-  hideErr();
-  const key = document.getElementById('apiKey').value.trim();
-  const hero = document.getElementById('heroSelect').value;
-  const rank = document.getElementById('rankSelect').value;
-  if (!key) { showErr('Entre ta clé API Gemini.'); return; }
-  if (!file) { showErr('Sélectionne une VOD.'); return; }
-  const btn = document.getElementById('analyzeBtn');
-  btn.disabled = true;
-  document.getElementById('progWrap').classList.add('on');
-  document.getElementById('results').classList.remove('on');
+  /* ─────────────────────────────────────────
+     CONFIG — edit here to customize
+  ───────────────────────────────────────── */
 
-  try {
-    // Étape 1 : Upload direct vers Gemini Files API
-    setProgress(10, 'Upload de la vidéo vers Gemini...');
-    const uploadRes = await fetch(
-      `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${key}`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Goog-Upload-Command': 'start, upload, finalize',
-          'X-Goog-Upload-Header-Content-Length': String(file.size),
-          'X-Goog-Upload-Header-Content-Type': file.type,
-          'Content-Type': file.type,
-        },
-        body: file
-      }
-    );
-    if (!uploadRes.ok) {
-      const e = await uploadRes.json().catch(()=>({}));
-      throw new Error(e.error?.message || 'Erreur upload Gemini');
-    }
-    const uploadData = await uploadRes.json();
-    const fileUri = uploadData.file?.uri;
-    const fileName = uploadData.file?.name;
-    if (!fileUri) throw new Error('URI fichier non reçu');
+  // Ranks shown in the dropdown
+  // Source : image officielle Overwatch competitive ranks
+  const RANKS = [
+    'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
+    'Maître', 'Grand Maître', 'Champion', 'Top 500',
+  ];
+  const DEFAULT_RANK = 'Diamant';
+  const DEFAULT_HERO = 'Tracer';
 
-    // Étape 2 : Attendre que Gemini traite la vidéo
-    setProgress(40, 'Traitement de la vidéo...');
-    for (let i = 0; i < 30; i++) {
-      await new Promise(r => setTimeout(r, 3000));
-      const fileRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${key}`);
-      const fileData = await fileRes.json();
-      if (fileData.state === 'ACTIVE') break;
-      if (fileData.state === 'FAILED') throw new Error('Traitement vidéo échoué');
-      setProgress(40 + i, `Traitement vidéo... ${i*3}s`);
-    }
+  // Category metadata: key matches what Gemini returns
+  // To add a category: add an entry here + a .cat-<key> CSS rule above
+  const CATEGORIES = {
+    death:       { label: 'Mort',        cssClass: 'cat-death' },
+    mistake:     { label: 'Erreur',      cssClass: 'cat-mistake' },
+    good:        { label: 'Bon moment',  cssClass: 'cat-good' },
+    positioning: { label: 'Position',    cssClass: 'cat-positioning' },
+    ulti:        { label: 'Ulti',        cssClass: 'cat-ulti' },
+  };
 
-    // Étape 3 : Envoyer au Worker pour analyse
-    setProgress(75, 'Analyse IA en cours...');
-    const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: key, hero, rank, file_uri: fileUri, mime_type: file.type })
+  // Progress steps shown during analysis
+  const PROGRESS_STEPS = [
+    { pct: 10, text: 'Envoi de la vidéo au serveur local...' },
+    { pct: 20, text: 'Upload vers Gemini... (peut prendre quelques minutes selon la taille)' },
+    { pct: 100, text: 'Analyse terminée !' },
+  ];
+
+
+  /* ─────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────── */
+  let selectedFile = null;
+
+
+  /* ─────────────────────────────────────────
+     INIT — populate selects from server
+  ───────────────────────────────────────── */
+  function initRanks() {
+    const select = document.getElementById('rankSelect');
+    RANKS.forEach(rank => {
+      const option = document.createElement('option');
+      option.value = rank;
+      option.textContent = rank;
+      if (rank === DEFAULT_RANK) option.selected = true;
+      select.appendChild(option);
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erreur Worker');
+  }
 
-    setProgress(100, 'Analyse terminée !');
-    render(data);
+  async function initHeroes() {
+    const select = document.getElementById('heroSelect');
+    try {
+      const res = await fetch('/heroes');
+      const heroes = await res.json();
+      heroes.forEach(hero => {
+        const option = document.createElement('option');
+        option.value = hero;
+        option.textContent = hero;
+        if (hero === DEFAULT_HERO) option.selected = true;
+        select.appendChild(option);
+      });
+    } catch (e) {
+      console.error('Impossible de charger les héros :', e);
+    }
+  }
 
-  } catch(err) {
-    showErr('Erreur : ' + err.message);
-    document.getElementById('progWrap').classList.remove('on');
-  } finally { btn.disabled = false; }
-}
+  initRanks();
+  initHeroes();
 
-function catCls(c) { return {death:'cat-death',mistake:'cat-mistake',good:'cat-good',positioning:'cat-positioning',ulti:'cat-ulti'}[c]||'cat-ulti'; }
-function catLbl(c) { return {death:'Mort',mistake:'Erreur',good:'Bon moment',positioning:'Position',ulti:'Ulti'}[c]||c; }
-function toggleTs(i) { const b=document.getElementById('tsb-'+i),c=document.getElementById('tsc-'+i); const open=b.classList.toggle('open'); c.textContent=open?'▲':'▼'; }
-function render(data) {
-  document.getElementById('summaryText').textContent = data.summary||'';
-  document.getElementById('tsList').innerHTML = (data.timestamps||[]).map((ts,i) => `
-    <div class="ts-item">
-      <div class="ts-head" onclick="toggleTs(${i})">
-        <div class="ts-time">${ts.time}</div>
-        <div class="ts-cat ${catCls(ts.category)}">${catLbl(ts.category)}</div>
-        <div class="ts-title">${ts.title}</div>
-        <div class="ts-chev" id="tsc-${i}">▼</div>
+
+  /* ─────────────────────────────────────────
+     UPLOAD ZONE
+  ───────────────────────────────────────── */
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput  = document.getElementById('fileInput');
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('drag');
+  });
+
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+
+  function setFile(file) {
+    selectedFile = file;
+    const mb = (file.size / 1024 / 1024).toFixed(0);
+    document.getElementById('fileInfo').textContent = `✓ ${file.name} — ${mb} Mo`;
+    uploadZone.classList.add('has-file');
+  }
+
+
+  /* ─────────────────────────────────────────
+     UI HELPERS
+  ───────────────────────────────────────── */
+  function setProgress(pct, text) {
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressStatus').textContent = text;
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = msg;
+    box.classList.add('visible');
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('visible');
+  }
+
+  function showProgress() {
+    document.getElementById('progressWrap').classList.add('visible');
+  }
+
+  function hideProgress() {
+    document.getElementById('progressWrap').classList.remove('visible');
+  }
+
+  function showResults() {
+    document.getElementById('results').classList.add('visible');
+  }
+
+  function hideResults() {
+    document.getElementById('results').classList.remove('visible');
+  }
+
+
+  /* ─────────────────────────────────────────
+     RESET
+  ───────────────────────────────────────── */
+  function resetForm() {
+    selectedFile = null;
+    fileInput.value = '';
+    document.getElementById('fileInfo').textContent = '';
+    uploadZone.classList.remove('has-file');
+    hideResults();
+    hideProgress();
+    hideError();
+  }
+
+
+  /* ─────────────────────────────────────────
+     ANALYZE — main action
+  ───────────────────────────────────────── */
+  async function analyze() {
+    hideError();
+
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const hero   = document.getElementById('heroSelect').value;
+    const rank   = document.getElementById('rankSelect').value;
+
+    if (!apiKey)       return showError('Entre ta clé API Gemini.');
+    if (!selectedFile) return showError('Sélectionne une VOD.');
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    showProgress();
+    hideResults();
+
+    try {
+      setProgress(PROGRESS_STEPS[0].pct, PROGRESS_STEPS[0].text);
+
+      const form = new FormData();
+      form.append('api_key', apiKey);
+      form.append('hero', hero);
+      form.append('rank', rank);
+      form.append('video', selectedFile);
+
+      setProgress(PROGRESS_STEPS[1].pct, PROGRESS_STEPS[1].text);
+
+      const res  = await fetch('/analyze', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+
+      setProgress(PROGRESS_STEPS[2].pct, PROGRESS_STEPS[2].text);
+      renderResults(data);
+
+    } catch (err) {
+      showError('Erreur : ' + err.message);
+      hideProgress();
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+
+  /* ─────────────────────────────────────────
+     RENDER RESULTS
+  ───────────────────────────────────────── */
+  function renderResults(data) {
+    renderSummary(data.summary);
+    renderTimestamps(data.timestamps || []);
+    renderPriorities(data.priorities || []);
+    hideProgress();
+    showResults();
+  }
+
+  function renderSummary(text) {
+    document.getElementById('summaryText').textContent = text || '';
+  }
+
+  function renderTimestamps(timestamps) {
+    const container = document.getElementById('timestampList');
+    container.innerHTML = timestamps.map((ts, i) => {
+      const cat = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
+      return `
+        <div class="ts-item">
+          <div class="ts-head" onclick="toggleTimestamp(${i})">
+            <div class="ts-time">${ts.time}</div>
+            <div class="ts-category ${cat.cssClass}">${cat.label}</div>
+            <div class="ts-title">${ts.title}</div>
+            <div class="ts-chevron" id="chev-${i}">▼</div>
+          </div>
+          <div class="ts-body" id="body-${i}">${ts.description}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderPriorities(priorities) {
+    const container = document.getElementById('priorityList');
+    container.innerHTML = priorities.map((text, i) => `
+      <div class="priority-item">
+        <div class="priority-num">${i + 1}.</div>
+        <div class="priority-text">${text}</div>
       </div>
-      <div class="ts-body" id="tsb-${i}">${ts.description}</div>
-    </div>`).join('');
-  document.getElementById('prioList').innerHTML = (data.priorities||[]).map((p,i) => `
-    <div class="prio-item"><div class="prio-num">${i+1}.</div><div class="prio-text">${p}</div></div>`).join('');
-  document.getElementById('progWrap').classList.remove('on');
-  document.getElementById('results').classList.add('on');
-}
+    `).join('');
+  }
+
+
+  /* ─────────────────────────────────────────
+     TIMESTAMP ACCORDION
+  ───────────────────────────────────────── */
+  function toggleTimestamp(index) {
+    const body    = document.getElementById(`body-${index}`);
+    const chevron = document.getElementById(`chev-${index}`);
+    const isOpen  = body.classList.toggle('open');
+    chevron.textContent = isOpen ? '▲' : '▼';
+  }
+
 </script>
 </body>
 </html>
