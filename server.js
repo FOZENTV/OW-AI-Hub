@@ -199,15 +199,14 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const fileSize = fs.statSync(tmpPath).size;
-    console.log(`[*] Taille fichier : ${(fileSize/1024/1024).toFixed(1)} Mo`);
+    const mimeType = video.mimetype || "video/mp4";
+    console.log(`[*] Upload vers Gemini (${(fs.statSync(tmpPath).size/1024/1024).toFixed(1)} Mo)…`);
 
     const uploaded = await ai.files.upload({
-      file: fs.createReadStream(tmpPath),
+      file: tmpPath,
       config: {
-        mimeType:    video.mimetype || "video/mp4",
+        mimeType,
         displayName: video.originalname,
-        sizeBytes:   fileSize,
       },
     });
 
@@ -230,7 +229,7 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
       contents: [{
         role: "user",
         parts: [
-          { fileData: { fileUri: uploaded.uri, mimeType: video.mimetype || "video/mp4" } },
+          { fileData: { fileUri: uploaded.uri, mimeType } },
           { text: buildPrompt(hero, rank) },
         ],
       }],
