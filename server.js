@@ -249,28 +249,63 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     const ai = new GoogleGenAI({ apiKey });
     console.log(`[*] Upload vers Gemini…`);
 
-    // Lire le fichier en buffer — le SDK ne supporte pas les ReadStream sans size
-    const fileBuffer = fs.readFileSync(toUpload);
-    const blob = new Blob([fileBuffer], { type: "video/mp4" });
-    console.log(`[*] Upload vers Gemini (${(blob.size/1024/1024).toFixed(1)} Mo)…`);
+    // Upload via REST API (stream sans charger en RAM)
+    const fileSize = fs.statSync(toUpload).size;
+    console.log(`[*] Upload vers Gemini (${(fileSize/1024/1024).toFixed(1)} Mo)…`);
 
-    const uploaded = await ai.files.upload({
-      file: blob,
-      config: {
-        mimeType:    "video/mp4",
-        displayName: video.originalname || "vod.mp4",
+    // Étape 1 : initier l'upload resumable
+    const initRes = await fetch(
+      `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=resumable&key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Upload-Protocol": "resumable",
+          "X-Goog-Upload-Command": "start",
+          "X-Goog-Upload-Header-Content-Length": String(fileSize),
+          "X-Goog-Upload-Header-Content-Type": "video/mp4",
+        },
+        body: JSON.stringify({ file: { display_name: video.originalname || "vod.mp4" } }),
+      }
+    );
+    if (!initRes.ok) {
+      const err = await initRes.json();
+      throw new Error(err.error?.message || "Erreur init upload Gemini");
+    }
+    const uploadUrl = initRes.headers.get("x-goog-upload-url");
+    if (!uploadUrl) throw new Error("URL upload Gemini introuvable");
+
+    // Étape 2 : streamer le fichier
+    const uploadRes = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Content-Length": String(fileSize),
+        "X-Goog-Upload-Offset": "0",
+        "X-Goog-Upload-Command": "upload, finalize",
       },
+      body: fs.createReadStream(toUpload),
+      duplex: "half",
     });
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json();
+      throw new Error(err.error?.message || "Erreur upload Gemini");
+    }
+    const uploadData = await uploadRes.json();
+    const uploaded = { name: uploadData.file.name, uri: uploadData.file.uri };
 
     console.log(`[*] Uploadé : ${uploaded.name}`);
 
     // ── Attendre ACTIVE ──────────────────
     let fileReady = false;
     for (let i = 0; i < POLL_MAX; i++) {
-      const f = await ai.files.get({ name: uploaded.name });
-      console.log(`[*] État : ${f.state}`);
-      if (f.state === "ACTIVE") { fileReady = true; break; }
-      if (f.state === "FAILED") return res.status(500).json({ error: "Traitement vidéo échoué" });
+      const pollRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${uploaded.name}?key=${apiKey}`
+      );
+      const fileInfo = await pollRes.json();
+      const state = fileInfo.state || fileInfo.file?.state;
+      console.log(`[*] État : ${state}`);
+      if (state === "ACTIVE") { fileReady = true; break; }
+      if (state === "FAILED") return res.status(500).json({ error: "Traitement vidéo échoué" });
       await new Promise(r => setTimeout(r, POLL_MS));
     }
 
@@ -292,7 +327,12 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     const raw    = response.text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(raw);
 
-    try { await ai.files.delete({ name: uploaded.name }); } catch {}
+    try {
+      await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${uploaded.name}?key=${apiKey}`,
+        { method: "DELETE" }
+      );
+    } catch {}
 
     console.log("[✓] Terminé");
     return res.json(parsed);
