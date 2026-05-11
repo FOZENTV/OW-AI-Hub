@@ -199,14 +199,15 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    console.log(`[*] Upload vers Gemini (${(video.size/1024/1024).toFixed(1)} Mo)…`);
+    const fileSize = fs.statSync(tmpPath).size;
+    console.log(`[*] Taille fichier : ${(fileSize/1024/1024).toFixed(1)} Mo`);
 
     const uploaded = await ai.files.upload({
       file: fs.createReadStream(tmpPath),
       config: {
-        mimeType:   video.mimetype || "video/mp4",
+        mimeType:    video.mimetype || "video/mp4",
         displayName: video.originalname,
-        sizeBytes:  video.size,
+        sizeBytes:   fileSize,
       },
     });
 
