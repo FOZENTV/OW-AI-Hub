@@ -352,7 +352,10 @@
      CONFIG
   ───────────────────────────────────────── */
 
-  const GEMINI_MODEL = 'gemini-2.5-flash'; // Modèle à changer ici si besoin
+  // URL de ton serveur Render — à changer si tu renommes le service
+  const SERVER_URL = 'https://ow-vod-analyzer.onrender.com';
+
+  const GEMINI_MODEL = 'gemini-2.5-flash'; // non utilisé côté client, gardé pour référence
 
   const RANKS = [
     'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
@@ -370,37 +373,13 @@
     ulti:        { label: 'Ulti',       cssClass: 'cat-ulti' },
   };
 
-  // Pour ajouter un héros : ajouter dans la bonne liste
-  const HEROES = {
-    Tank: [
-      'D.Va', 'Domina', 'Doomfist', 'Hazard', 'Junker Queen', 'Mauga',
-      'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston',
-      'Wrecking Ball', 'Zarya',
-    ],
-    Damage: [
-      'Anran', 'Ashe', 'Bastion', 'Cassidy', 'Echo', 'Emre', 'Freja',
-      'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Sierra',
-      'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn',
-      'Tracer', 'Vendetta', 'Venture', 'Widowmaker',
-    ],
-    Support: [
-      'Ana', 'Baptiste', 'Brigitte', 'Illari', 'Jetpack Cat', 'Juno',
-      'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Mizuki', 'Moira',
-      'Wuyang', 'Zenyatta',
-    ],
-  };
-
-  const HEROES_FLAT = Object.values(HEROES).flat();
-
   /* ─────────────────────────────────────────
      INIT
   ───────────────────────────────────────── */
 
-  // Icône par classe pour le optgroup
-  const CLASS_ICONS = { Tank: '🛡️ Tank', Damage: '⚔️ Damage', Support: '💚 Support' };
+  const ROLE_LABELS = { Tank: '🛡️ Tank', Damage: '⚔️ Damage', Support: '💚 Support' };
 
-  function initSelects() {
-    // ── Rangs ──
+  function initRanks() {
     const rankSel = document.getElementById('rankSelect');
     RANKS.forEach(r => {
       const o = document.createElement('option');
@@ -408,26 +387,36 @@
       if (r === DEFAULT_RANK) o.selected = true;
       rankSel.appendChild(o);
     });
-
-    // ── Héros : groupés par classe, triés alphabétiquement dans chaque groupe ──
-    const heroSel = document.getElementById('heroSelect');
-    Object.entries(HEROES).forEach(([className, heroes]) => {
-      const group = document.createElement('optgroup');
-      group.label = CLASS_ICONS[className] || className;
-
-      // Tri alphabétique dans le groupe
-      [...heroes].sort((a, b) => a.localeCompare(b, 'fr')).forEach(h => {
-        const o = document.createElement('option');
-        o.value = h; o.textContent = h;
-        if (h === DEFAULT_HERO) o.selected = true;
-        group.appendChild(o);
-      });
-
-      heroSel.appendChild(group);
-    });
   }
 
-  initSelects();
+  // Héros chargés depuis heroes.json via le serveur
+  // Pour ajouter un héros : modifier heroes.json uniquement
+  async function initHeroes() {
+    const heroSel = document.getElementById('heroSelect');
+    try {
+      const res    = await fetch(SERVER_URL + '/heroes');
+      const heroes = await res.json(); // { Tank: [...], Damage: [...], Support: [...] }
+
+      Object.entries(heroes).forEach(([role, list]) => {
+        const group = document.createElement('optgroup');
+        group.label = ROLE_LABELS[role] || role;
+        [...list]
+          .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
+          .forEach(h => {
+            const o = document.createElement('option');
+            o.value = h; o.textContent = h;
+            if (h === DEFAULT_HERO) o.selected = true;
+            group.appendChild(o);
+          });
+        heroSel.appendChild(group);
+      });
+    } catch (e) {
+      console.error('Impossible de charger les héros :', e);
+    }
+  }
+
+  initRanks();
+  initHeroes();
 
   /* ─────────────────────────────────────────
      UPLOAD ZONE
@@ -481,100 +470,6 @@
   }
 
   /* ─────────────────────────────────────────
-     GEMINI FILES API — upload direct depuis le navigateur
-  ───────────────────────────────────────── */
-
-  const BASE = 'https://generativelanguage.googleapis.com';
-
-  async function uploadToGemini(apiKey, file) {
-    setProgress(30, `Upload en cours… (${(file.size/1024/1024).toFixed(0)} Mo)`);
-
-    // Upload multipart — pas de headers custom, compatible CORS navigateur
-    const metadata = JSON.stringify({ file: { display_name: file.name } });
-    const body = new FormData();
-    body.append('metadata', new Blob([metadata], { type: 'application/json' }));
-    body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }));
-
-    const res = await fetch(
-      `${BASE}/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,
-      { method: 'POST', body }
-    );
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || 'Erreur upload : ' + res.status);
-    }
-
-    const data = await res.json();
-    return data.file; // { name, uri, state, ... }
-  }
-
-  async function waitForActive(apiKey, fileName) {
-    setProgress(55, 'Traitement de la vidéo par Gemini…');
-    for (let i = 0; i < 30; i++) {
-      const res  = await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`);
-      const data = await res.json();
-      if (data.state === 'ACTIVE') return data;
-      if (data.state === 'FAILED') throw new Error('Traitement vidéo échoué côté Gemini');
-      await new Promise(r => setTimeout(r, 3000));
-    }
-    throw new Error('Timeout — la vidéo met trop longtemps à traiter');
-  }
-
-  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
-    setProgress(75, 'Analyse IA en cours…');
-
-    const prompt = `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
-
-Le joueur joue ${hero} en ranked ${rank}.
-
-Réponds UNIQUEMENT en JSON valide sans markdown ni backticks, avec cette structure :
-{
-  "summary": "résumé global du gameplay en 3-4 phrases, points forts et points faibles",
-  "timestamps": [
-    {
-      "time": "MM:SS",
-      "category": "death|mistake|good|positioning|ulti",
-      "title": "titre court du moment",
-      "description": "analyse détaillée de ce moment et conseil concret adapté au niveau ${rank}"
-    }
-  ],
-  "priorities": ["priorité 1 à travailler", "priorité 2", "priorité 3"]
-}
-
-Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au niveau ${rank} sur ${hero}.`;
-
-    const res = await fetch(
-      `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { file_data: { file_uri: fileUri, mime_type: fileMime } },
-              { text: prompt },
-            ],
-          }],
-        }),
-      }
-    );
-
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-
-    const raw = data.candidates[0].content.parts[0].text
-      .replace(/```json|```/g, '').trim();
-    return JSON.parse(raw);
-  }
-
-  async function deleteFile(apiKey, fileName) {
-    try {
-      await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`, { method: 'DELETE' });
-    } catch {}
-  }
-
-  /* ─────────────────────────────────────────
      ANALYZE — action principale
   ───────────────────────────────────────── */
 
@@ -593,26 +488,30 @@ Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au 
     showProgress();
     hideResults();
 
-    let uploadedFileName = null;
-
     try {
-      setProgress(10, 'Connexion à Gemini…');
+      setProgress(10, 'Envoi de la vidéo…');
 
-      const fileInfo = await uploadToGemini(apiKey, selectedFile);
-      uploadedFileName = fileInfo.name;
+      const form = new FormData();
+      form.append('api_key', apiKey);
+      form.append('hero', hero);
+      form.append('rank', rank);
+      form.append('video', selectedFile);
 
-      const activeFile = await waitForActive(apiKey, fileInfo.name);
-      const parsed = await generateAnalysis(apiKey, activeFile.uri, selectedFile.type, hero, rank);
+      setProgress(25, 'Upload en cours… (peut prendre quelques minutes)');
+
+      const res  = await fetch(SERVER_URL + '/analyze', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Erreur serveur ' + res.status);
 
       setProgress(100, 'Analyse terminée !');
-      renderResults(parsed);
+      renderResults(data);
 
     } catch (err) {
       showError('Erreur : ' + err.message);
       hideProgress();
     } finally {
       btn.disabled = false;
-      if (uploadedFileName) deleteFile(apiKey, uploadedFileName);
     }
   }
 
