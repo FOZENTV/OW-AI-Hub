@@ -132,6 +132,7 @@ Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 }
 
 Nombre de timestamps : entre 5 et 10. Qualité > quantité. Zéro invention.`;
+}
 
 // ─────────────────────────────────────────
 //  APP
