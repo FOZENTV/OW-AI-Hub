@@ -249,11 +249,16 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     const ai = new GoogleGenAI({ apiKey });
     console.log(`[*] Upload vers Gemini…`);
 
+    // Lire le fichier en buffer — le SDK ne supporte pas les ReadStream sans size
+    const fileBuffer = fs.readFileSync(toUpload);
+    const blob = new Blob([fileBuffer], { type: "video/mp4" });
+    console.log(`[*] Upload vers Gemini (${(blob.size/1024/1024).toFixed(1)} Mo)…`);
+
     const uploaded = await ai.files.upload({
-      file: fs.createReadStream(toUpload),
+      file: blob,
       config: {
         mimeType:    "video/mp4",
-        displayName: video.originalname,
+        displayName: video.originalname || "vod.mp4",
       },
     });
 
