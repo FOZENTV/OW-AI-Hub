@@ -204,8 +204,9 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     const uploaded = await ai.files.upload({
       file: fs.createReadStream(tmpPath),
       config: {
-        mimeType:    video.mimetype || "video/mp4",
+        mimeType:   video.mimetype || "video/mp4",
         displayName: video.originalname,
+        sizeBytes:  video.size,
       },
     });
 
