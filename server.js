@@ -182,9 +182,8 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     console.log(`[*] Upload vers Gemini (${sizeMb} Mo)…`);
 
     // Upload depuis le fichier temporaire sur disque
-    const fileStream = fs.createReadStream(tmpPath);
     const uploaded = await ai.files.upload({
-      file: fileStream,
+      file: tmpPath,
       config: {
         mimeType: video.mimetype || "video/mp4",
         displayName: video.originalname,
