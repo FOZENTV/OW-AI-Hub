@@ -4,287 +4,130 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OW VOD Analyzer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-
-    /* ─────────────────────────────────────────
-       DESIGN TOKENS
-    ───────────────────────────────────────── */
     :root {
-      --bg:       #0a0c10;
-      --bg2:      #0f1218;
-      --bg3:      #161b24;
-      --border:   #1e2530;
-      --border2:  #2a3342;
-      --accent:   #f5a623;
-      --blue:     #4a9eff;
-      --green:    #3ecf8e;
-      --red:      #ff4d6d;
-      --purple:   #a78bfa;
-      --text:     #e8edf5;
-      --text2:    #8b95a8;
-      --text3:    #4a5568;
-      --font-display: 'Rajdhani', sans-serif;
-      --font-body:    'Inter', sans-serif;
+      --bg:      #0a0c10;
+      --bg2:     #0f1218;
+      --bg3:     #161b24;
+      --border:  #1e2530;
+      --border2: #2a3342;
+      --accent:  #f5a623;
+      --blue:    #4a9eff;
+      --green:   #3ecf8e;
+      --red:     #ff4d6d;
+      --purple:  #a78bfa;
+      --text:    #e8edf5;
+      --text2:   #8b95a8;
+      --text3:   #4a5568;
+      --display: 'Rajdhani', sans-serif;
+      --body:    'Inter', sans-serif;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100vh; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px); pointer-events:none; z-index:999; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-    }
+    /* Header */
+    .header { padding:20px 32px; border-bottom:1px solid var(--border); background:var(--bg2); display:flex; align-items:center; gap:14px; }
+    .logo { font-family:var(--display); font-size:20px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+    .logo span { color:var(--text3); font-weight:500; }
+    .badge { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border:1px solid var(--border2); border-radius:3px; color:var(--text3); }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
-      pointer-events: none;
-      z-index: 999;
-    }
+    /* Layout */
+    .main { padding:28px 32px; max-width:900px; margin:0 auto; }
 
-    /* ── Header ── */
-    .header {
-      padding: 20px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg2);
-      display: flex;
-      align-items: center;
-      gap: 14px;
+    /* Form */
+    input[type="password"], select {
+      background:var(--bg3); border:1px solid var(--border2); border-radius:5px;
+      padding:7px 12px; font-size:13px; color:var(--text); outline:none;
+      font-family:var(--body); transition:border-color .2s;
     }
-    .logo {
-      font-family: var(--font-display);
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .logo span { color: var(--text3); font-weight: 500; }
-    .badge {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      color: var(--text3);
-    }
+    input[type="password"]:focus, select:focus { border-color:var(--accent); }
+    input[type="password"]::placeholder { color:var(--text3); }
+    select option, select optgroup { background:var(--bg3); }
+    input[type="file"] { display:none; }
 
-    /* ── Layout ── */
-    .main { padding: 28px 32px; max-width: 900px; margin: 0 auto; }
+    /* API row */
+    .api-row { display:flex; align-items:center; gap:10px; margin-bottom:20px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:14px 18px; }
+    .api-row label { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text2); white-space:nowrap; }
+    .api-row a { color:var(--blue); font-size:12px; text-decoration:none; }
+    .api-row a:hover { text-decoration:underline; }
 
-    /* ── Form elements ── */
-    input[type="password"], input[type="text"], select {
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      padding: 7px 12px;
-      font-size: 13px;
-      color: var(--text);
-      outline: none;
-      font-family: var(--font-body);
-      transition: border-color 0.2s;
-    }
-    input[type="password"]:focus, input[type="text"]:focus, select:focus { border-color: var(--accent); }
-    input[type="password"]::placeholder { color: var(--text3); }
-    select option { background: var(--bg3); }
-    input[type="file"] { display: none; }
+    /* Upload zone */
+    .upload-zone { border:1.5px dashed var(--border2); border-radius:10px; padding:40px 24px; text-align:center; cursor:pointer; transition:border-color .2s, background .2s; background:var(--bg2); margin-bottom:20px; }
+    .upload-zone:hover, .upload-zone.drag { border-color:var(--accent); background:rgba(245,166,35,.04); }
+    .upload-zone.has-file { border-style:solid; border-color:var(--green); background:rgba(62,207,142,.04); }
+    .upload-icon { font-size:36px; margin-bottom:10px; opacity:.35; }
+    .upload-title { font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; margin-bottom:5px; }
+    .upload-sub { font-size:12px; color:var(--text2); }
+    .upload-info { font-size:13px; color:var(--green); margin-top:10px; font-weight:500; }
 
-    /* ── API Row ── */
-    .api-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 18px;
-    }
-    .api-row label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text2);
-      white-space: nowrap;
-    }
-    .api-row a { color: var(--blue); font-size: 12px; text-decoration: none; }
-    .api-row a:hover { text-decoration: underline; }
+    /* Config row */
+    .config-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+    .config-block { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:14px 18px; }
+    .config-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:7px; }
 
-    /* ── Upload zone ── */
-    .upload-zone {
-      border: 1.5px dashed var(--border2);
-      border-radius: 10px;
-      padding: 40px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      background: var(--bg2);
-      margin-bottom: 20px;
-    }
-    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(245,166,35,0.04); }
-    .upload-zone.has-file { border-style: solid; border-color: var(--green); background: rgba(62,207,142,0.04); }
-    .upload-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.35; }
-    .upload-title {
-      font-family: var(--font-display);
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-    .upload-sub { font-size: 12px; color: var(--text2); }
-    .upload-info { font-size: 13px; color: var(--green); margin-top: 10px; font-weight: 500; }
+    /* Error */
+    .error-box { background:rgba(255,77,109,.08); border:1px solid rgba(255,77,109,.25); border-radius:7px; padding:12px 16px; font-size:13px; color:var(--red); display:none; margin-bottom:14px; }
+    .error-box.visible { display:block; }
 
-    /* ── Config row ── */
-    .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-    .config-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; }
-    .config-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 7px;
-    }
+    /* Button */
+    .analyze-btn { width:100%; padding:13px; background:var(--accent); border:none; border-radius:7px; font-family:var(--display); font-size:15px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#0a0c10; cursor:pointer; transition:background .2s, transform .2s; margin-bottom:24px; }
+    .analyze-btn:hover:not(:disabled) { background:#e8962a; transform:translateY(-1px); }
+    .analyze-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 
-    /* ── Error ── */
-    .error-box {
-      background: rgba(255,77,109,0.08);
-      border: 1px solid rgba(255,77,109,0.25);
-      border-radius: 7px;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--red);
-      display: none;
-      margin-bottom: 14px;
-    }
-    .error-box.visible { display: block; }
+    /* Progress */
+    .progress-wrap { display:none; margin-bottom:24px; }
+    .progress-wrap.visible { display:block; }
+    .progress-track { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-bottom:8px; }
+    .progress-bar { height:100%; background:linear-gradient(90deg,var(--accent),var(--blue)); width:0%; transition:width .5s; border-radius:2px; }
+    .progress-status { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:8px; }
+    .blink-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
 
-    /* ── Analyze button ── */
-    .analyze-btn {
-      width: 100%;
-      padding: 13px;
-      background: var(--accent);
-      border: none;
-      border-radius: 7px;
-      font-family: var(--font-display);
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #0a0c10;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
-      margin-bottom: 24px;
-    }
-    .analyze-btn:hover:not(:disabled) { background: #e8962a; transform: translateY(-1px); }
-    .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    /* Results */
+    .results { display:none; }
+    .results.visible { display:block; }
+    .results-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .results-title { font-family:var(--display); font-size:19px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .reset-btn { padding:6px 14px; background:none; border:1px solid var(--border2); border-radius:5px; font-size:12px; color:var(--text2); cursor:pointer; font-family:var(--body); transition:border-color .2s, color .2s; }
+    .reset-btn:hover { border-color:var(--text2); color:var(--text); }
 
-    /* ── Progress ── */
-    .progress-wrap { display: none; margin-bottom: 24px; }
-    .progress-wrap.visible { display: block; }
-    .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--blue));
-      width: 0%;
-      transition: width 0.5s;
-      border-radius: 2px;
-    }
-    .progress-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
-    .blink-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    /* Summary */
+    .summary-card { background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:16px 20px; margin-bottom:20px; }
+    .summary-card h3 { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+    .summary-text { font-size:13px; line-height:1.75; color:var(--text2); }
+    .section-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
 
-    /* ── Results ── */
-    .results { display: none; }
-    .results.visible { display: block; }
-    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .results-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-    .reset-btn {
-      padding: 6px 14px;
-      background: none;
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      font-size: 12px;
-      color: var(--text2);
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .reset-btn:hover { border-color: var(--text2); color: var(--text); }
+    /* Timestamps */
+    .ts-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+    .ts-head { display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; }
+    .ts-head:hover { background:rgba(255,255,255,.02); }
+    .ts-time { font-family:var(--display); font-size:17px; font-weight:700; color:var(--accent); min-width:48px; letter-spacing:.04em; }
+    .ts-cat { font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; padding:2px 8px; border-radius:3px; }
+    .cat-death       { background:rgba(255,77,109,.12);  color:var(--red);    border:1px solid rgba(255,77,109,.25); }
+    .cat-mistake     { background:rgba(245,166,35,.10);  color:var(--accent); border:1px solid rgba(245,166,35,.20); }
+    .cat-good        { background:rgba(62,207,142,.10);  color:var(--green);  border:1px solid rgba(62,207,142,.20); }
+    .cat-positioning { background:rgba(74,158,255,.10);  color:var(--blue);   border:1px solid rgba(74,158,255,.20); }
+    .cat-ulti        { background:rgba(167,139,250,.10); color:var(--purple); border:1px solid rgba(167,139,250,.20); }
+    .ts-title { font-size:13px; font-weight:500; flex:1; color:var(--text); }
+    .ts-chev { font-size:12px; color:var(--text3); }
+    .ts-body { padding:12px 16px; font-size:13px; line-height:1.7; color:var(--text2); border-top:1px solid var(--border); display:none; }
+    .ts-body.open { display:block; }
 
-    /* ── Summary ── */
-    .summary-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin-bottom: 20px;
-    }
-    .summary-card h3 {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-    .summary-text { font-size: 13px; line-height: 1.75; color: var(--text2); }
-    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
-
-    /* ── Timestamps ── */
-    .ts-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-    .ts-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; }
-    .ts-head:hover { background: rgba(255,255,255,0.02); }
-    .ts-time { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--accent); min-width: 48px; letter-spacing: 0.04em; }
-    .ts-category { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; }
-    .cat-death       { background: rgba(255,77,109,0.12);  color: var(--red);    border: 1px solid rgba(255,77,109,0.25); }
-    .cat-mistake     { background: rgba(245,166,35,0.10);  color: var(--accent); border: 1px solid rgba(245,166,35,0.20); }
-    .cat-good        { background: rgba(62,207,142,0.10);  color: var(--green);  border: 1px solid rgba(62,207,142,0.20); }
-    .cat-positioning { background: rgba(74,158,255,0.10);  color: var(--blue);   border: 1px solid rgba(74,158,255,0.20); }
-    .cat-ulti        { background: rgba(167,139,250,0.10); color: var(--purple); border: 1px solid rgba(167,139,250,0.20); }
-    .ts-title { font-size: 13px; font-weight: 500; flex: 1; color: var(--text); }
-    .ts-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
-    .ts-body { padding: 12px 16px; font-size: 13px; line-height: 1.7; color: var(--text2); border-top: 1px solid var(--border); display: none; }
-    .ts-body.open { display: block; }
-
-    /* ── Priorities ── */
-    .priorities-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--blue);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin-top: 20px;
-    }
-    .priorities-card h3 {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 12px;
-    }
-    .priority-item { display: flex; gap: 10px; margin-bottom: 9px; }
-    .priority-num { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text3); min-width: 18px; }
-    .priority-text { font-size: 13px; line-height: 1.65; color: var(--text2); }
-
+    /* Priorities */
+    .priorities-card { background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:16px 20px; margin-top:20px; }
+    .priorities-card h3 { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--blue); margin-bottom:12px; }
+    .priority-item { display:flex; gap:10px; margin-bottom:9px; }
+    .priority-num { font-family:var(--display); font-size:15px; font-weight:700; color:var(--text3); min-width:18px; }
+    .priority-text { font-size:13px; line-height:1.65; color:var(--text2); }
   </style>
 </head>
 <body>
 
 <header class="header">
   <div class="logo">OW <span>/</span> VOD Analyzer</div>
-  <div class="badge">Client-side · Gemini</div>
+  <div class="badge">Gemini 2.5 Pro</div>
 </header>
 
 <main class="main">
@@ -318,13 +161,8 @@
   <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ Analyser la VOD</button>
 
   <div class="progress-wrap" id="progressWrap">
-    <div class="progress-track">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="progress-status">
-      <div class="blink-dot"></div>
-      <span id="progressStatus">Chargement...</span>
-    </div>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-status"><div class="blink-dot"></div><span id="progressStatus">Chargement...</span></div>
   </div>
 
   <div class="results" id="results">
@@ -347,304 +185,163 @@
 </main>
 
 <script>
-
-  /* ─────────────────────────────────────────
-     CONFIG
-  ───────────────────────────────────────── */
-
-  const GEMINI_MODEL = 'gemini-2.5-flash'; // Modèle à changer ici si besoin
-
-  const RANKS = [
-    'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
-    'Maître', 'Grand Maître', 'Champion', 'Top 500',
-  ];
-  const DEFAULT_RANK = 'Diamant';
+  /* ── CONFIG ── */
+  const SERVER_URL   = 'https://ow-vod-analyzer.onrender.com';
   const DEFAULT_HERO = 'Tracer';
-
-  // Pour ajouter une catégorie : ajouter ici + règle CSS .cat-xxx
+  const DEFAULT_RANK = 'Diamant';
+  const RANKS = ['Bronze','Argent','Or','Platine','Diamant','Maître','Grand Maître','Champion','Top 500'];
+  const ROLE_LABELS = { Tank:'🛡️ Tank', Damage:'⚔️ Damage', Support:'💚 Support' };
   const CATEGORIES = {
-    death:       { label: 'Mort',       cssClass: 'cat-death' },
-    mistake:     { label: 'Erreur',     cssClass: 'cat-mistake' },
-    good:        { label: 'Bon moment', cssClass: 'cat-good' },
-    positioning: { label: 'Position',   cssClass: 'cat-positioning' },
-    ulti:        { label: 'Ulti',       cssClass: 'cat-ulti' },
+    death:       { label:'Mort',       cls:'cat-death' },
+    mistake:     { label:'Erreur',     cls:'cat-mistake' },
+    good:        { label:'Bon moment', cls:'cat-good' },
+    positioning: { label:'Position',   cls:'cat-positioning' },
+    ulti:        { label:'Ulti',       cls:'cat-ulti' },
   };
 
-  // Pour ajouter un héros : ajouter dans la bonne liste
-  const HEROES = {
-    Tank: [
-      'D.Va', 'Domina', 'Doomfist', 'Hazard', 'Junker Queen', 'Mauga',
-      'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston',
-      'Wrecking Ball', 'Zarya',
-    ],
-    Damage: [
-      'Anran', 'Ashe', 'Bastion', 'Cassidy', 'Echo', 'Emre', 'Freja',
-      'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Sierra',
-      'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn',
-      'Tracer', 'Vendetta', 'Venture', 'Widowmaker',
-    ],
-    Support: [
-      'Ana', 'Baptiste', 'Brigitte', 'Illari', 'Jetpack Cat', 'Juno',
-      'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Mizuki', 'Moira',
-      'Wuyang', 'Zenyatta',
-    ],
+  // Fallback si le serveur est endormi
+  const HEROES_FALLBACK = {
+    Tank:    ['D.Va','Domina','Doomfist','Hazard','Junker Queen','Mauga','Orisa','Ramattra','Reinhardt','Roadhog','Sigma','Winston','Wrecking Ball','Zarya'],
+    Damage:  ['Anran','Ashe','Bastion','Cassidy','Echo','Emre','Freja','Genji','Hanzo','Junkrat','Mei','Pharah','Reaper','Sierra','Sojourn','Soldier: 76','Sombra','Symmetra','Torbjörn','Tracer','Vendetta','Venture','Widowmaker'],
+    Support: ['Ana','Baptiste','Brigitte','Illari','Jetpack Cat','Juno','Kiriko','Lifeweaver','Lúcio','Mercy','Mizuki','Moira','Wuyang','Zenyatta'],
   };
 
-  const HEROES_FLAT = Object.values(HEROES).flat();
+  /* ── INIT ── */
+  function buildHeroSelect(heroes) {
+    const sel = document.getElementById('heroSelect');
+    sel.innerHTML = '';
+    Object.entries(heroes).forEach(([role, list]) => {
+      const grp = document.createElement('optgroup');
+      grp.label = ROLE_LABELS[role] || role;
+      [...list].sort((a,b) => a.localeCompare(b,'fr',{sensitivity:'base'})).forEach(h => {
+        const o = document.createElement('option');
+        o.value = h; o.textContent = h;
+        if (h === DEFAULT_HERO) o.selected = true;
+        grp.appendChild(o);
+      });
+      sel.appendChild(grp);
+    });
+  }
 
-  /* ─────────────────────────────────────────
-     INIT
-  ───────────────────────────────────────── */
-
-  function initSelects() {
-    const rankSel = document.getElementById('rankSelect');
+  function initRanks() {
+    const sel = document.getElementById('rankSelect');
     RANKS.forEach(r => {
       const o = document.createElement('option');
       o.value = r; o.textContent = r;
       if (r === DEFAULT_RANK) o.selected = true;
-      rankSel.appendChild(o);
-    });
-
-    const heroSel = document.getElementById('heroSelect');
-    HEROES_FLAT.forEach(h => {
-      const o = document.createElement('option');
-      o.value = h; o.textContent = h;
-      if (h === DEFAULT_HERO) o.selected = true;
-      heroSel.appendChild(o);
+      sel.appendChild(o);
     });
   }
 
-  initSelects();
+  async function initHeroes() {
+    buildHeroSelect(HEROES_FALLBACK); // affichage immédiat
+    try {
+      const res    = await fetch(SERVER_URL + '/heroes', { signal: AbortSignal.timeout(5000) });
+      const heroes = await res.json();
+      if (heroes && !Array.isArray(heroes)) buildHeroSelect(heroes);
+    } catch { /* fallback déjà affiché */ }
+  }
 
-  /* ─────────────────────────────────────────
-     UPLOAD ZONE
-  ───────────────────────────────────────── */
+  initRanks();
+  initHeroes();
 
+  /* ── UPLOAD ZONE ── */
   let selectedFile = null;
-  const uploadZone = document.getElementById('uploadZone');
-  const fileInput  = document.getElementById('fileInput');
+  const zone = document.getElementById('uploadZone');
+  const fi   = document.getElementById('fileInput');
 
-  uploadZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
-  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag');
-    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-  });
+  zone.addEventListener('click', () => fi.click());
+  fi.addEventListener('change', e => setFile(e.target.files[0]));
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag'); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
 
-  function setFile(file) {
-    selectedFile = file;
-    const mb = (file.size / 1024 / 1024).toFixed(0);
-    document.getElementById('fileInfo').textContent = `✓ ${file.name} — ${mb} Mo`;
-    uploadZone.classList.add('has-file');
+  function setFile(f) {
+    selectedFile = f;
+    document.getElementById('fileInfo').textContent = `✓ ${f.name} — ${(f.size/1024/1024).toFixed(0)} Mo`;
+    zone.classList.add('has-file');
   }
 
-  /* ─────────────────────────────────────────
-     UI HELPERS
-  ───────────────────────────────────────── */
-
-  function setProgress(pct, text) {
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressStatus').textContent = text;
-  }
-  function showError(msg) {
-    const b = document.getElementById('errorBox');
-    b.textContent = msg; b.classList.add('visible');
-  }
-  function hideError() { document.getElementById('errorBox').classList.remove('visible'); }
-  function showProgress() { document.getElementById('progressWrap').classList.add('visible'); }
-  function hideProgress() { document.getElementById('progressWrap').classList.remove('visible'); }
-  function showResults() { document.getElementById('results').classList.add('visible'); }
-  function hideResults() { document.getElementById('results').classList.remove('visible'); }
+  /* ── UI HELPERS ── */
+  const setProgress = (pct, txt) => { document.getElementById('progressBar').style.width = pct+'%'; document.getElementById('progressStatus').textContent = txt; };
+  const showErr  = msg => { const b=document.getElementById('errorBox'); b.textContent=msg; b.classList.add('visible'); };
+  const hideErr  = ()  => document.getElementById('errorBox').classList.remove('visible');
+  const showProg = ()  => document.getElementById('progressWrap').classList.add('visible');
+  const hideProg = ()  => document.getElementById('progressWrap').classList.remove('visible');
+  const showRes  = ()  => document.getElementById('results').classList.add('visible');
+  const hideRes  = ()  => document.getElementById('results').classList.remove('visible');
 
   function resetForm() {
-    selectedFile = null;
-    fileInput.value = '';
+    selectedFile = null; fi.value = '';
     document.getElementById('fileInfo').textContent = '';
-    uploadZone.classList.remove('has-file');
-    hideResults(); hideProgress(); hideError();
+    zone.classList.remove('has-file');
+    hideRes(); hideProg(); hideErr();
   }
 
-  /* ─────────────────────────────────────────
-     GEMINI FILES API — upload direct depuis le navigateur
-  ───────────────────────────────────────── */
-
-  const BASE = 'https://generativelanguage.googleapis.com';
-
-  async function uploadToGemini(apiKey, file) {
-    setProgress(30, `Upload en cours… (${(file.size/1024/1024).toFixed(0)} Mo)`);
-
-    // Upload multipart — pas de headers custom, compatible CORS navigateur
-    const metadata = JSON.stringify({ file: { display_name: file.name } });
-    const body = new FormData();
-    body.append('metadata', new Blob([metadata], { type: 'application/json' }));
-    body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }));
-
-    const res = await fetch(
-      `${BASE}/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,
-      { method: 'POST', body }
-    );
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || 'Erreur upload : ' + res.status);
-    }
-
-    const data = await res.json();
-    return data.file; // { name, uri, state, ... }
-  }
-
-  async function waitForActive(apiKey, fileName) {
-    setProgress(55, 'Traitement de la vidéo par Gemini…');
-    for (let i = 0; i < 30; i++) {
-      const res  = await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`);
-      const data = await res.json();
-      if (data.state === 'ACTIVE') return data;
-      if (data.state === 'FAILED') throw new Error('Traitement vidéo échoué côté Gemini');
-      await new Promise(r => setTimeout(r, 3000));
-    }
-    throw new Error('Timeout — la vidéo met trop longtemps à traiter');
-  }
-
-  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
-    setProgress(75, 'Analyse IA en cours…');
-
-    const prompt = `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
-
-Le joueur joue ${hero} en ranked ${rank}.
-
-Réponds UNIQUEMENT en JSON valide sans markdown ni backticks, avec cette structure :
-{
-  "summary": "résumé global du gameplay en 3-4 phrases, points forts et points faibles",
-  "timestamps": [
-    {
-      "time": "MM:SS",
-      "category": "death|mistake|good|positioning|ulti",
-      "title": "titre court du moment",
-      "description": "analyse détaillée de ce moment et conseil concret adapté au niveau ${rank}"
-    }
-  ],
-  "priorities": ["priorité 1 à travailler", "priorité 2", "priorité 3"]
-}
-
-Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au niveau ${rank} sur ${hero}.`;
-
-    const res = await fetch(
-      `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { file_data: { file_uri: fileUri, mime_type: fileMime } },
-              { text: prompt },
-            ],
-          }],
-        }),
-      }
-    );
-
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-
-    const raw = data.candidates[0].content.parts[0].text
-      .replace(/```json|```/g, '').trim();
-    return JSON.parse(raw);
-  }
-
-  async function deleteFile(apiKey, fileName) {
-    try {
-      await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`, { method: 'DELETE' });
-    } catch {}
-  }
-
-  /* ─────────────────────────────────────────
-     ANALYZE — action principale
-  ───────────────────────────────────────── */
-
+  /* ── ANALYZE ── */
   async function analyze() {
-    hideError();
-
+    hideErr();
     const apiKey = document.getElementById('apiKey').value.trim();
     const hero   = document.getElementById('heroSelect').value;
     const rank   = document.getElementById('rankSelect').value;
 
-    if (!apiKey)       return showError('Entre ta clé API Gemini.');
-    if (!selectedFile) return showError('Sélectionne une VOD.');
+    if (!apiKey)       return showErr('Entre ta clé API Gemini.');
+    if (!selectedFile) return showErr('Sélectionne une VOD.');
 
     const btn = document.getElementById('analyzeBtn');
     btn.disabled = true;
-    showProgress();
-    hideResults();
-
-    let uploadedFileName = null;
+    showProg(); hideRes();
 
     try {
-      setProgress(10, 'Connexion à Gemini…');
+      setProgress(10, 'Envoi de la vidéo...');
+      const form = new FormData();
+      form.append('api_key', apiKey);
+      form.append('hero', hero);
+      form.append('rank', rank);
+      form.append('video', selectedFile);
 
-      const fileInfo = await uploadToGemini(apiKey, selectedFile);
-      uploadedFileName = fileInfo.name;
+      setProgress(25, 'Upload en cours… (peut prendre quelques minutes)');
+      const res  = await fetch(SERVER_URL + '/analyze', { method:'POST', body:form });
+      const data = await res.json();
 
-      const activeFile = await waitForActive(apiKey, fileInfo.name);
-      const parsed = await generateAnalysis(apiKey, activeFile.uri, selectedFile.type, hero, rank);
+      if (!res.ok) throw new Error(data.error || 'Erreur serveur ' + res.status);
 
       setProgress(100, 'Analyse terminée !');
-      renderResults(parsed);
-
+      renderResults(data);
     } catch (err) {
-      showError('Erreur : ' + err.message);
-      hideProgress();
+      showErr('Erreur : ' + err.message);
+      hideProg();
     } finally {
       btn.disabled = false;
-      if (uploadedFileName) deleteFile(apiKey, uploadedFileName);
     }
   }
 
-  /* ─────────────────────────────────────────
-     RENDER RESULTS
-  ───────────────────────────────────────── */
-
+  /* ── RENDER ── */
   function renderResults(data) {
     document.getElementById('summaryText').textContent = data.summary || '';
-    renderTimestamps(data.timestamps || []);
-    renderPriorities(data.priorities || []);
-    hideProgress();
-    showResults();
-  }
-
-  function renderTimestamps(timestamps) {
-    document.getElementById('timestampList').innerHTML = timestamps.map((ts, i) => {
-      const cat = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
-      return `
-        <div class="ts-item">
-          <div class="ts-head" onclick="toggleTimestamp(${i})">
-            <div class="ts-time">${ts.time}</div>
-            <div class="ts-category ${cat.cssClass}">${cat.label}</div>
-            <div class="ts-title">${ts.title}</div>
-            <div class="ts-chevron" id="chev-${i}">▼</div>
-          </div>
-          <div class="ts-body" id="body-${i}">${ts.description}</div>
-        </div>`;
+    document.getElementById('timestampList').innerHTML = (data.timestamps||[]).map((ts,i) => {
+      const cat = CATEGORIES[ts.category] || { label:ts.category, cls:'cat-ulti' };
+      return `<div class="ts-item">
+        <div class="ts-head" onclick="toggle(${i})">
+          <div class="ts-time">${ts.time}</div>
+          <div class="ts-cat ${cat.cls}">${cat.label}</div>
+          <div class="ts-title">${ts.title}</div>
+          <div class="ts-chev" id="chev-${i}">▼</div>
+        </div>
+        <div class="ts-body" id="body-${i}">${ts.description}</div>
+      </div>`;
     }).join('');
+    document.getElementById('priorityList').innerHTML = (data.priorities||[]).map((p,i) =>
+      `<div class="priority-item"><div class="priority-num">${i+1}.</div><div class="priority-text">${p}</div></div>`
+    ).join('');
+    hideProg(); showRes();
   }
 
-  function renderPriorities(priorities) {
-    document.getElementById('priorityList').innerHTML = priorities.map((text, i) => `
-      <div class="priority-item">
-        <div class="priority-num">${i + 1}.</div>
-        <div class="priority-text">${text}</div>
-      </div>`).join('');
+  function toggle(i) {
+    const b = document.getElementById('body-'+i);
+    const c = document.getElementById('chev-'+i);
+    c.textContent = b.classList.toggle('open') ? '▲' : '▼';
   }
-
-  function toggleTimestamp(index) {
-    const body    = document.getElementById(`body-${index}`);
-    const chevron = document.getElementById(`chev-${index}`);
-    chevron.textContent = body.classList.toggle('open') ? '▲' : '▼';
-  }
-
 </script>
 </body>
 </html>
