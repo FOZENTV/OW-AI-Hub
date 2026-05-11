@@ -568,28 +568,138 @@
     throw new Error('Timeout — la vidéo met trop longtemps à traiter');
   }
 
-  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
-    setProgress(75, 'Analyse IA en cours…');
+  /* ─────────────────────────────────────────
+     HERO CONTEXT — kit complet par héros
+  ───────────────────────────────────────── */
 
-    const prompt = `Tu es un coach Overwatch expert. Analyse cette VOD de gameplay Overwatch 2.
+  const HERO_CONTEXT = {
+    // ── TANK ──
+    'D.Va':          "Kit: Boosters (dash), Defense Matrix (mange les projectiles), Micro Missiles, Self-Destruct (ulti). Points clés: timing Defense Matrix sur les ultis ennemis critiques (Sound Barrier, Coalescence…), usage offensif vs défensif des Boosters, placement du Self-Destruct pour forcer repositionnement, gestion du remech (ne pas mourir hors mech inutilement).",
+    'Domina':        "Héros récent. Analyser: usage des capacités de contrôle, positionnement en tant que tank, timing des engagements et des retraites, coordination avec les supports.",
+    'Doomfist':      "Kit: Seismic Slam, Rocket Punch (charge), Power Block (parry → Meteor Strike empowered). Points clés: combos pour burst (Slam+Punch), Power Block timing sur gros dégâts, Meteor Strike pour repositionnement ou engage, survie via les boucliers générés par les dégâts.",
+    'Hazard':        "Héros récent. Analyser: kit de mobilité, engagement/disengage, usage des cooldowns défensifs, pression sur les backlines.",
+    'Junker Queen': "Kit: Carnage (hache, wound), Commanding Shout (ulti pseudo), Jagged Blade (recall), Rampage (ulti). Points clés: maintenir les wounds actifs pour le sustain, Commanding Shout pour engage ou disengage, Rampage timing pour anti-heal sur cibles critiques, agressivité contrôlée.",
+    'Mauga':         "Kit: deux chainguns (Incendiary + Volatile), Cardiac Overdrive (sustain), Cage Fight (ulti). Points clés: gestion des deux modes de chaingun, Cardiac Overdrive timing (offense vs defense), Cage Fight placement pour isoler un ennemi, sustain via les dégâts enflammés.",
+    'Orisa':         "Kit: Javelin Spin (bloque projectiles + push), Energy Javelin (stun), Fortify (invulnérabilité partielle + CC immunity), Terra Surge (ulti charge). Points clés: Fortify sur les ultis ennemis, combo Javelin stun + Terra Surge, Spin pour traverser les chokes, pression constante sans overextend.",
+    'Ramattra':      "Kit: Nemesis Form (bras de mêlée + shield), Void Accelerator (projectiles), Annihilation (ulti). Points clés: switch Nemesis Form au bon moment (engage vs sustain), Annihilation pour hold un point ou teamfight, positionnement pour maximiser les hits en Nemesis, coordination avec les supports pour survivre en forme.",
+    'Reinhardt':     "Kit: Barrier Field (shield 1600 HP), Rocket Hammer, Fire Strike, Charge, Earthshatter (ulti). Points clés: shield management (ne jamais le casser inutilement), Fire Strike à travers le shield pour harcèlement, Charge usage (situationnel, très risqué), Earthshatter setup (flanc, après Graviton, après Sound Barrier).",
+    'Roadhog':       "Kit: Chain Hook (pull + stun), Take A Breather (self-heal), Scrap Gun, Whole Hog (ulti). Points clés: Hook accuracy et target prioritization (sniper, support isolé), combo Hook → melee → Scrap Gun pour one-shot, Take A Breather timing (pas pendant un duel), Whole Hog pour push ou zone control.",
+    'Sigma':         "Kit: Hyperspheres, Kinetic Grasp (absorb projectiles → shield), Accretion (rock stun), Experimental Barrier (shield repositionnable), Gravitic Flux (ulti). Points clés: Kinetic Grasp timing sur les ultis (Barrage, Blizzard), placement du shield flottant, Accretion precision sur cibles prioritaires, Flux combo (avec Shatter, Graviton, Coalescence).",
+    'Winston':       "Kit: Tesla Cannon (AoE), Jump Pack (leap + AoE landing), Barrier Projector (bulles), Primal Rage (ulti). Points clés: cibles de dive (éliminer le support isolé, pas le tank), barrier placement pour protection pendant le dive, Primal Rage pour survive ou disengage d'urgence, coordination avec le deuxième dive.",
+    'Wrecking Ball': "Kit: Grappling Claw (swing + vitesse), Roll (boule), Pile Driver (slam AoE), Adaptive Shield (bouclier scalable), Minefield (ulti). Points clés: générer des boucliers en touchant beaucoup d'ennemis, Pile Driver sur clusters, Minefield en zone contest ou derrière l'ennemi, ne jamais rester statique.",
+    'Zarya':         "Kit: Particle Cannon (beam + orbs), Particle Barrier (bulles soi + allié), Graviton Surge (ulti). Points clés: timing des bulles (anticipation des dégâts, pas réaction tardive), maintenir haute énergie pour maximiser les dégâts, Graviton Surge combo (avec Dragonblade, Blizzard, Earthshatter, Flux), bulle sur les alliés en danger critique.",
 
-Le joueur joue ${hero} en ranked ${rank}.
+    // ── DAMAGE ──
+    'Anran':         "Héros récent. Analyser: précision des dégâts, gestion des cooldowns, positionnement safe vs aggressif, impact sur le teamfight.",
+    'Ashe':          "Kit: Viper (semi-auto/ADS), Coach Gun (knockback soi), Dynamite (AoE + feu), B.O.B. (ulti turret). Points clés: ADS headshots consistency, Dynamite placement (préemptif, pas réactif), Coach Gun pour disengage ou hauteur, B.O.B. placement (doorway, angle inattendu pour maximum disruption).",
+    'Bastion':       "Kit: Configuration Recon (mobile), Configuration Assault (minigun), Reconfigure (self-heal), A-36 Tactical Grenade, Artillerie (ulti). Points clés: switch Assault au bon moment (choke, grouped enemies), grenade arc pour derrière les covers, positionnement Assault (dos couvert, ligne de retraite), Artillerie precision.",
+    'Cassidy':       "Kit: Peacekeeper (revolver), Magnetic Grenade (tracking), Combat Roll (reload + dodge), Deadeye (ulti charge). Points clés: Magnetic Grenade sur cibles mobiles (Tracer, Genji), Combat Roll cancel pour DPS burst, Deadeye usage sécurisé (jamais en fight ouvert), fan-the-hammer au corps-à-corps uniquement.",
+    'Echo':          "Kit: Tri-shot, Sticky Bombs (AoE), Focusing Beam (execute <50% HP), Glide, Flight, Duplicate (ulti). Points clés: Focusing Beam sur cibles basses HP (ne pas gaspiller sur cible pleine vie), Duplicate sur l'ulti ennemi le plus impactant, Sticky Bombs groupement, mobilité pour angles inattendus.",
+    'Emre':          "Héros récent. Analyser: kit de dégâts, mobilité, cooldowns offensifs, sélection de cibles.",
+    'Freja':         "Héros récent. Analyser: précision, gestion de la distance optimale, usage des cooldowns, impact sur les engagements.",
+    'Genji':         "Kit: Shuriken (3-shot + fan), Deflect (reflect projectiles), Swift Strike (dash + reset on kill), Dragonblade (ulti). Points clés: dash reset management (ne pas utiliser Swift Strike sans kill assuré après), Deflect timing (anti-Ana sleep, anti-Roadhog hook), Dragonblade targets (ne pas blade un Zarya plein énergie), engagement/disengage via wall-climb.",
+    'Hanzo':         "Kit: Storm Bow (charge), Sonic Arrow (reveal), Storm Arrows (rapid-fire), Lunge (double-jump), Dragonstrike (ulti). Points clés: Storm Arrows pour éliminer rapidement une cible ou finir un duel, Sonic Arrow pour intel (point contest, choke), Dragonstrike en combo (après Flash Bang, Graviton, Earthshatter) ou pour zone denial.",
+    'Junkrat':       "Kit: Frag Launcher, Concussion Mine (x2, jump + kill), Steel Trap (CC), RIP-Tire (ulti). Points clés: Concussion Mine mobility (jump sur hauteur), Steel Trap en chokepoint ou sur flanc, arc de tir maîtrisé pour derrière les covers, RIP-Tire routing inattendu (flanc, plafond).",
+    'Mei':           "Kit: Endothermic Blaster (slow + freeze), Ice Wall, Cryo-Freeze (invulnérabilité), Blizzard (ulti). Points clés: Ice Wall usage (split l'équipe ennemie, bloque un ulti, sauve un allié), Blizzard combo (avec Graviton, Earthshatter, Flux), freeze 1v1 pour elim sûre, Cryo-Freeze pour survive et repositionnement.",
+    'Pharah':        "Kit: Rocket Launcher, Jump Jet (vertical), Hover Jets, Concussive Blast (knockback), Barrage (ulti). Points clés: maintenir la hauteur pour réduire les angles ennemis, Concussive Blast pour push ennemis hors cover ou self-knockback, Barrage placement (angle, distance), cibler les hitscans au sol (identifier quand rentrer).",
+    'Reaper':        "Kit: Hellfire Shotguns, Wraith Form (invulnérabilité + repositionnement), Shadow Step (téléport), Death Blossom (ulti). Points clés: flanking pour backline (supports isolés), Wraith Form pour disengage (pas pour engager), Shadow Step préemptif (pas en combat), Death Blossom quand entouré (pas en 1v1).",
+    'Sierra':        "Héros récent. Analyser: kit de dégâts, angles de tir, gestion des ressources, timing des engagements.",
+    'Sojourn':       "Kit: Railgun (auto + charged shot), Power Slide, Disruptor Shot (AoE slow), Overclock (ulti). Points clés: charger le Railgun via les dégâts auto pour one-shot, Power Slide pour angle surprise ou disengage, Disruptor Shot sur clusters pour faciliter les kills, Overclock targets prioritaires (tank plein vie, support critique).",
+    'Soldier: 76':   "Kit: Heavy Pulse Rifle, Sprint, Biotic Field (heal AoE), Helix Rockets, Tactical Visor (ulti). Points clés: Biotic Field placement (soi + alliés proches, pas en solo), Helix Rockets en point-blank pour burst, Tactical Visor targets (commencer par le plus facile à tuer), positionnement mid-range constant.",
+    'Sombra':        "Kit: Machine Pistol, Hack (silence), Stealth (invisibilité), Translocator (beacon), EMP (ulti). Points clés: Hack targets prioritaires (Ana, Zenyatta, Kiriko pour couper les soins), EMP timing (après Zarya bulles dépensées, avant ulti ennemi), Translocator placement sécurisé pour escape, ne jamais engager un tank hacké.",
+    'Symmetra':      "Kit: Photon Projector (beam charge + orbs), Sentry Turrets (x3), Teleporter (ulti A) ou Photon Barrier (ulti B). Points clés: placement des tourelles (derrière coins, hauteur, cluster de 3 pour burst), beam charge maximale en combat corps-à-corps, Teleporter pour repositionnement d'équipe rapide, Barrier pour bloquer un choke ou un ulti.",
+    'Torbjörn':      "Kit: Rivet Gun, Forge Hammer, Deploy Turret, Overload (self-buff), Molten Core (ulti). Points clés: placement turret (hauteur, angle difficile à atteindre, derrière cover), Overload pour survie ou burst, Molten Core en zone contest (choke, point) pour area denial, repositionner la tourelle si inefficace.",
+    'Tracer':        "Kit: Pulse Pistols (hitscan), Blink (x3 charges), Recall (revenir 3s en arrière + heal), Pulse Bomb (ulti colle). Points clés: gestion des Blink charges (ne jamais en utiliser 3 d'affilée sans recall prêt), Recall timing (escape death, pas panique), Pulse Bomb sur tanks ou clusters (coller un Reinhardt ou un Rein/Zarya groupés), flanking sur le support le plus isolé.",
+    'Vendetta':      "Héros récent. Analyser: kit d'assassin, burst damage, mobilité, target prioritization.",
+    'Venture':       "Kit: Smart Excavator (projectiles), Burrow (underground dash), Drill Dash (dash AoE), Tectonic Shock (ulti). Points clés: Burrow pour repositionnement imprévu ou escape, combo Drill Dash + Smart Excavator pour burst, Tectonic Shock sur clusters, playstyle d'assassin en mêlée.",
+    'Widowmaker':    "Kit: Widow's Kiss (sniper + auto), Grappling Hook, Venom Mine, Infra-Sight (ulti). Points clés: angle selection (jamais le même angle deux fois de suite), repositionnement après kill (avant que l'ennemi identifie la position), Grappling Hook pour hauteur ou escape, Infra-Sight timing (avant engage allié, pas gaspillé solo).",
 
-Réponds UNIQUEMENT en JSON valide sans markdown ni backticks, avec cette structure :
+    // ── SUPPORT ──
+    'Ana':           "Kit: Biotic Rifle (heal/damage + sleep), Sleep Dart, Biotic Grenade (anti-heal + boost heal), Nano Boost (ulti). Points clés: Sleep Dart sur les ultis critiques (Dragonblade, Primal Rage, Deadeye), Biotic Grenade timing (anti-heal sur tank plein vie pendant fight, pas sur cible déjà basse), Nano Boost sur le héros avec l'ulti le plus impactant (Genji, Reaper, Soldier).",
+    'Baptiste':      "Kit: Biotic Launcher (heal burst + grenades), Regenerative Burst (self+nearby heal), Immortality Field (empêche les morts), Amplification Matrix (ulti double dégâts/soins). Points clés: Immortality Field placement (derrière cover, pas au milieu), timing (anticiper le burst ennemi, pas réaction), Amplification Matrix axe de tir allié, Regenerative Burst proactif.",
+    'Brigitte':      "Kit: Rocket Flail, Shield Bash (stun), Repair Pack (heal + armure), Rally (ulti armure AoE), Inspire (passive heal AoE sur hit). Points clés: Shield Bash combo sur Tracer/Genji, Repair Pack sur le joueur le plus en danger (pas toujours soi), Rally timing (avant engage ou pour tenir un point), rester proche pour maximiser Inspire.",
+    'Illari':        "Kit: Solar Rifle (heal charged + dégâts), Outburst (dash knockback), Healing Pylon (tourelle de soin), Captive Sun (ulti explosion retardée). Points clés: Healing Pylon placement sécurisé (hauteur, coin, difficile à détruire), Outburst pour disengage ou repositionnement, Captive Sun combo (avec Flash Bang, Sleep Dart, Graviton), precision du rifle pour damage.",
+    'Jetpack Cat':   "Héros récent. Analyser: mobilité du kit, soins proactifs vs réactifs, positionnement en tant que support mobile.",
+    'Juno':          "Kit: Pulsar Torpedoes, Glide Boost (mobilité), Hyper Ring (speed boost allié), Orbital Ray (ulti heal+damage beam). Points clés: Hyper Ring placement pour engage ou disengage d'équipe, Orbital Ray axe optimal (maximum d'alliés + ennemis), Glide Boost pour survivre aux dives, gestion de la distance de soin.",
+    'Kiriko':        "Kit: Healing Ofuda (heal tracking), Kunai (headshot), Swift Step (téléport allié), Protection Suzu (invulnérabilité + cleanse), Kitsune Rush (ulti speed+cooldown). Points clés: Suzu timing (cleanse anti-nade, anti-sleep, anti-hack — anticiper pas réagir), Swift Step target (allié le plus en danger ou le plus loin), Kitsune Rush avant l'engage allié pour maximum impact, Kunai headshots consistency.",
+    'Lifeweaver':    "Kit: Healing Blossom (charge), Thorn Volley, Petal Platform (élévateur), Life Grip (pull allié), Parting Gift (passive à la mort), Tree of Life (ulti). Points clés: Life Grip timing (sauver un allié en danger de mort, pas interrompre son ulti), Petal Platform pour créer des angles, Tree of Life placement (milieu du teamfight, zone contestée), Healing Blossom charge optimale.",
+    'Lúcio':         "Kit: Sonic Amplifier (dégâts + boop), Crossfade (speed/heal switch), Amp It Up (boost), Wall Ride, Sound Barrier (ulti). Points clés: speed vs heal switch (speed pour engage/disengage, heal quand pression forte), boop usage (pousser hors map, interrompre une charge, séparer), Sound Barrier timing (juste avant un ulti ennemi AoE — Graviton+Dragonblade, Barrage), Wall Ride pour survivre.",
+    'Mercy':         "Kit: Caduceus Staff (heal beam 55/s ou damage boost x30%), Caduceus Blaster (pistolet), Guardian Angel (GA dash vers allié), Resurrect (revive), Valkyrie (ulti). Points clés: damage boost vs healing (boost un DPS en position de kill > heal un allié stable), GA mobility (angle, hauteur, disengage), Rez timing (ne jamais rez si 2+ ennemis visent l'endroit), Valkyrie pour chain-rez ou sustain en teamfight.",
+    'Mizuki':        "Héros récent. Analyser: soins proactifs vs réactifs, mobilité, usage des cooldowns, coordination avec le tank.",
+    'Moira':         "Kit: Biotic Grasp (heal drain + orbe), Biotic Orb (orbe heal/damage), Fade (escape + invulnérabilité courte), Coalescence (ulti beam). Points clés: Biotic Orb placement (couloir pour heal passif ou pression dégâts), Fade usage (escape d'une mort certaine, pas de reposition offensif), resource management (équilibre heal/damage pour recharger), Coalescence pour traverse les barrières ou survivre en teamfight.",
+    'Wuyang':        "Héros récent. Analyser: type de soins (burst vs sustained), mobilité, cooldowns défensifs, impact en teamfight.",
+    'Zenyatta':      "Kit: Orb of Harmony (heal passif allié), Orb of Discord (debuff ennemi -30% résistance), Orb Volley, Kick, Transcendence (ulti invulnérabilité+heal AoE). Points clés: Discord orb sur la cible prioritaire (tank le plus agressif ou DPS qui engage), Harmony orb switch rapide sur l'allié qui prend des dégâts, Transcendence timing (contre Graviton+ulti, Coalescence, Barrage), positionnement safe (Zenyatta a zéro mobilité).",
+  };
+
+  const RANK_CONTEXT = {
+    'Bronze':       "Joueur débutant : lacunes sur les mécaniques de base, awareness minimal, décisions hasardeuses. Focalise les conseils sur les fondamentaux : position safe, utiliser les soins, ne pas mourir inutilement.",
+    'Argent':       "Comprend les bases mais manque de régularité. Erreurs d'habitude répétées. Conseils sur la constance et éviter les erreurs récurrentes.",
+    'Or':           "Niveau correct mais mauvaises décisions de positioning et de timing. Commence à avoir de bonnes mécaniques mais mal appliquées.",
+    'Platine':      "Bonnes mécaniques de base, mauvais timing d'ulti et sous-utilisation du kit. Conseils sur le timing et l'impact des cooldowns.",
+    'Diamant':      "Solide mécaniquement, erreurs surtout sur le macro-jeu et la prise de risque. Peut comprendre des conseils plus nuancés.",
+    'Maître':       "Très bon niveau individuel. Erreurs subtiles : resource management, cooldown tracking, lecture des ennemis. Conseils précis et techniques.",
+    'Grand Maître': "Quasi-optimal. Analyser les micro-décisions, l'adaptation aux matchups, la gestion du tempo. Sois très précis.",
+    'Champion':     "Niveau élite. Identifier uniquement les erreurs les plus subtiles sur la position exacte, le timing, la lecture des ultis ennemis.",
+    'Top 500':      "Niveau professionnel. Uniquement les erreurs les plus fines et les optimisations de haut niveau.",
+  };
+
+  function buildPrompt(hero, rank) {
+    const heroTips = HERO_CONTEXT[hero]
+      || `Héros ${hero}. Analyse l'utilisation de son kit (cooldowns, ressources, positionnement) et son impact sur le teamfight.`;
+    const rankTips = RANK_CONTEXT[rank]
+      || `Adapte la profondeur de l'analyse au niveau ${rank}.`;
+
+    return `Tu es un coach Overwatch 2 professionnel et expert du héros ${hero}.
+
+CONTEXTE DU JOUEUR :
+- Héros joué : ${hero}
+- Rang : ${rank}
+- Profil rang : ${rankTips}
+
+CONNAISSANCE DU KIT DE ${hero.toUpperCase()} :
+${heroTips}
+
+MISSION : Analyse cette VOD et fournis un coaching précis, technique et actionnable sur l'utilisation du kit de ${hero}.
+
+RÈGLES D'ANALYSE :
+1. Chaque timestamp doit mentionner LE cooldown ou LA ressource spécifique impliqué(e) (ex: "Blink #3 gaspillé", "Recall pas utilisé", "Discord orb sur mauvaise cible")
+2. Explique POURQUOI c'est une erreur ou un bon play (conséquence concrète sur le fight)
+3. Donne un conseil ACTIONNABLE applicable dès la prochaine partie
+4. Adapte la profondeur au rang ${rank} — ${rankTips}
+5. Pour les "good" moments : explique ce qui était bien et comment reproduire systématiquement
+
+CATÉGORIES (utilise exactement ces valeurs) :
+- death : mort évitable liée à un mauvais usage du kit ou un positioning hors-kit
+- mistake : erreur de kit sans mort (cooldown mal timé, mauvaise cible, ressource gaspillée)
+- positioning : placement ou angle sous-optimal pour ce héros spécifiquement
+- ulti : gestion d'ulti (bon ou mauvais timing, mauvaise cible, combo raté ou réussi)
+- good : moment à reproduire — technique correcte ou décision optimale
+
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 {
-  "summary": "résumé global du gameplay en 3-4 phrases, points forts et points faibles",
+  "summary": "Bilan global de 4-5 phrases : niveau général sur ${hero}, points forts du kit utilisés, axes d'amélioration prioritaires sur le kit",
   "timestamps": [
     {
       "time": "MM:SS",
-      "category": "death|mistake|good|positioning|ulti",
-      "title": "titre court du moment",
-      "description": "analyse détaillée de ce moment et conseil concret adapté au niveau ${rank}"
+      "category": "death|mistake|positioning|ulti|good",
+      "title": "Titre court mentionnant le cooldown/ressource impliqué",
+      "description": "Ce qui s'est passé avec quel cooldown/ressource, pourquoi c'est bien/mal, conseil concret et spécifique à ${hero}"
     }
   ],
-  "priorities": ["priorité 1 à travailler", "priorité 2", "priorité 3"]
+  "priorities": [
+    "Point kit #1 le plus important à améliorer sur ${hero} avec conseil concret",
+    "Point kit #2 avec conseil concret",
+    "Point kit #3 avec conseil concret"
+  ]
 }
 
-Identifie 6 à 10 moments clés importants. Sois précis, concret et adapté au niveau ${rank} sur ${hero}.`;
+Identifie 8 à 12 moments clés significatifs. Priorise les moments où le kit est mal utilisé.`;
+  }
+
+  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
+    setProgress(75, 'Analyse IA en cours…');
+
+    const prompt = buildPrompt(hero, rank);
 
     const res = await fetch(
       `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
