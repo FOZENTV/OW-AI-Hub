@@ -15,7 +15,7 @@ const { GoogleGenAI } = require("@google/genai");
 // ─────────────────────────────────────────
 
 const PORT         = process.env.PORT || 5000;
-const GEMINI_MODEL = "gemini-3-flash-preview";
+const GEMINI_MODEL = "gemini-2.5-pro";
 const POLL_MS      = 3000;
 const POLL_MAX     = 30;
 
@@ -69,49 +69,69 @@ const HERO_CONTEXT = {
 
 function buildPrompt(hero, rank) {
   const rankTips = RANK_CONTEXT[rank] || "Analyse le gameplay de façon adaptée au niveau du joueur.";
-  const heroTips = HERO_CONTEXT[hero] || `Joue ${hero}. Analyse son kit : cooldowns, positionnement, gestion des ressources et impact sur le teamfight.`;
+  const heroTips = HERO_CONTEXT[hero] || `Joue ${hero}. Kit : cooldowns, positionnement, gestion des ressources.`;
 
-  return `Tu es un coach Overwatch 2 professionnel.
+  return `Tu es un coach Overwatch 2 professionnel. Héros joué : ${hero}. Rang : ${rank}.
 
-CONTEXTE :
-- Héros : ${hero} | Rang : ${rank}
-- Profil rang : ${rankTips}
-- Focus héros : ${heroTips}
+━━━ PASSE 1 — INVENTAIRE VISUEL (OBLIGATOIRE avant d'analyser) ━━━
 
-MISSION : Analyse cette VOD et fournis un coaching détaillé et actionnable.
+Avant toute analyse, accomplis ces 4 vérifications dans ta tête :
 
-RÈGLES :
-- Explique POURQUOI c'est une erreur ou un bon play, pas juste QUOI
-- Donne un conseil CONCRET applicable dès la prochaine partie
-- Adapte la profondeur au rang ${rank}
-- Sois direct et honnête
+[A] COMPOSITION : Lis le tab score ou les portraits en haut de l'écran.
+    → Identifie les 5 héros ennemis EXACTEMENT comme ils apparaissent à l'écran.
+    → Liste les 5 héros alliés.
+    → NE MENTIONNE JAMAIS un héros absent de cette liste dans l'analyse.
+
+[B] KIT DE ${hero.toUpperCase()} — capacités VISIBLES dans ce jeu :
+    ${heroTips}
+    → Tu ne peux citer une capacité que si tu la vois réellement utilisée ou disponible dans le HUD.
+
+[C] KILL FEED : Lis le journal en haut à droite pour confirmer chaque mort/kill.
+    → Un timestamp "death" n'est valide que si tu vois l'écran de mort OU le kill feed.
+
+[D] TIMESTAMPS VALIDES : Ne crée un timestamp que si tu peux répondre OUI aux 3 questions :
+    1. Je vois exactement ce moment à l'écran ? (timecode vérifié)
+    2. Je peux nommer la capacité ou l'action précise impliquée ?
+    3. Ce moment a un impact réel sur le fight (pas un moment neutre) ?
+
+━━━ PASSE 2 — ANALYSE ━━━
+
+Sur la base UNIQUEMENT de ce que tu as observé en Passe 1 :
+
+CONTEXTE RANG ${rank} : ${rankTips}
 
 CATÉGORIES :
-- death : mort évitable (mauvais positioning, overextension)
-- mistake : erreur sans mort (ulti gaspillé, mauvaise cible)
-- positioning : problème de placement ou d'angle
-- ulti : gestion d'ulti bonne ou mauvaise
-- good : bon moment à reproduire
+- death : mort confirmée par le kill feed ou l'écran de mort
+- mistake : erreur concrète sans mort (capacité gaspillée, mauvaise cible visible)
+- positioning : angle ou placement sous-optimal visible à l'écran
+- ulti : ulti utilisé ou raté — timing et cible visibles
+- good : décision correcte à reproduire — action clairement visible
+
+RÈGLES D'ÉCRITURE :
+- Chaque description COMMENCE par la capacité impliquée (ex: "Blink #2 utilisé pour...")
+- Explique la conséquence RÉELLE visible (ex: "...laissant le flanc droit découvert")
+- Termine par UN conseil applicable immédiatement
+- Si tu doutes d'un timestamp : supprime-le
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 {
-  "summary": "Bilan global de 4-5 phrases : niveau général, points forts, axes d'amélioration",
+  "summary": "3-4 phrases basées sur des patterns répétés observés dans la VOD. Cite des moments précis. Ne généralise pas.",
   "timestamps": [
     {
       "time": "MM:SS",
       "category": "death|mistake|positioning|ulti|good",
-      "title": "Titre court du moment",
-      "description": "Ce qui s'est passé, pourquoi c'est bien/mal, conseil concret"
+      "title": "Capacité ou action — conséquence courte",
+      "description": "Ce qui est visible à l'écran, capacité impliquée, conséquence, conseil concret."
     }
   ],
   "priorities": [
-    "Point #1 le plus important avec conseil concret",
-    "Point #2 avec conseil concret",
-    "Point #3 avec conseil concret"
+    "Erreur répétée #1 observée PLUSIEURS fois dans la VOD — conseil",
+    "Erreur répétée #2 — conseil",
+    "Point fort ou axe d'amélioration secondaire — conseil"
   ]
 }
 
-Identifie 7 à 12 moments clés significatifs.`;
+Nombre de timestamps : entre 5 et 10. Qualité > quantité. Zéro invention.`;
 
 // ─────────────────────────────────────────
 //  APP
