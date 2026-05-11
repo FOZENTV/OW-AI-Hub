@@ -390,7 +390,7 @@
      CONFIG
   ───────────────────────────────────────── */
 
-  const GEMINI_MODEL = 'gemini-3-flash-preview'; // Modèle à changer ici si besoin
+  const GEMINI_MODEL = 'gemini-2.5-pro'; // Modèle à changer ici si besoin
 
   const RANKS = [
     'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
@@ -645,55 +645,71 @@
 
   function buildPrompt(hero, rank) {
     const heroTips = HERO_CONTEXT[hero]
-      || `Héros ${hero}. Analyse l'utilisation de son kit (cooldowns, ressources, positionnement) et son impact sur le teamfight.`;
+      || `Héros ${hero}. Kit : cooldowns, positionnement, gestion des ressources.`;
     const rankTips = RANK_CONTEXT[rank]
       || `Adapte la profondeur de l'analyse au niveau ${rank}.`;
 
-    return `Tu es un coach Overwatch 2 professionnel et expert du héros ${hero}.
+    return `Tu es un coach Overwatch 2 professionnel. Héros joué : ${hero}. Rang : ${rank}.
 
-CONTEXTE DU JOUEUR :
-- Héros joué : ${hero}
-- Rang : ${rank}
-- Profil rang : ${rankTips}
+━━━ PASSE 1 — INVENTAIRE VISUEL (OBLIGATOIRE avant d'analyser) ━━━
 
-CONNAISSANCE DU KIT DE ${hero.toUpperCase()} :
-${heroTips}
+Avant toute analyse, accomplis ces 4 vérifications dans ta tête :
 
-MISSION : Analyse cette VOD et fournis un coaching précis, technique et actionnable sur l'utilisation du kit de ${hero}.
+[A] COMPOSITION : Lis le tab score ou les portraits en haut de l'écran.
+    → Identifie les 5 héros ennemis EXACTEMENT comme ils apparaissent à l'écran.
+    → Liste les 5 héros alliés.
+    → NE MENTIONNE JAMAIS un héros absent de cette liste dans l'analyse.
 
-RÈGLES D'ANALYSE :
-1. Chaque timestamp doit mentionner LE cooldown ou LA ressource spécifique impliqué(e) (ex: "Blink #3 gaspillé", "Recall pas utilisé", "Discord orb sur mauvaise cible")
-2. Explique POURQUOI c'est une erreur ou un bon play (conséquence concrète sur le fight)
-3. Donne un conseil ACTIONNABLE applicable dès la prochaine partie
-4. Adapte la profondeur au rang ${rank} — ${rankTips}
-5. Pour les "good" moments : explique ce qui était bien et comment reproduire systématiquement
+[B] KIT DE ${hero.toUpperCase()} — capacités VISIBLES dans ce jeu :
+    ${heroTips}
+    → Tu ne peux citer une capacité que si tu la vois réellement utilisée ou disponible dans le HUD.
 
-CATÉGORIES (utilise exactement ces valeurs) :
-- death : mort évitable liée à un mauvais usage du kit ou un positioning hors-kit
-- mistake : erreur de kit sans mort (cooldown mal timé, mauvaise cible, ressource gaspillée)
-- positioning : placement ou angle sous-optimal pour ce héros spécifiquement
-- ulti : gestion d'ulti (bon ou mauvais timing, mauvaise cible, combo raté ou réussi)
-- good : moment à reproduire — technique correcte ou décision optimale
+[C] KILL FEED : Lis le journal en haut à droite pour confirmer chaque mort/kill.
+    → Un timestamp "death" n'est valide que si tu vois l'écran de mort OU le kill feed.
+
+[D] TIMESTAMPS VALIDES : Ne crée un timestamp que si tu peux répondre OUI aux 3 questions :
+    1. Je vois exactement ce moment à l'écran ? (timecode vérifié)
+    2. Je peux nommer la capacité ou l'action précise impliquée ?
+    3. Ce moment a un impact réel sur le fight (pas un moment neutre) ?
+
+━━━ PASSE 2 — ANALYSE ━━━
+
+Sur la base UNIQUEMENT de ce que tu as observé en Passe 1 :
+
+CONTEXTE RANG ${rank} : ${rankTips}
+
+CATÉGORIES :
+- death : mort confirmée par le kill feed ou l'écran de mort
+- mistake : erreur concrète sans mort (capacité gaspillée, mauvaise cible visible)
+- positioning : angle ou placement sous-optimal visible à l'écran
+- ulti : ulti utilisé ou raté — timing et cible visibles
+- good : décision correcte à reproduire — action clairement visible
+
+RÈGLES D'ÉCRITURE :
+- Chaque description COMMENCE par la capacité impliquée (ex: "Blink #2 utilisé pour...")
+- Explique la conséquence RÉELLE visible (ex: "...laissant le flanc droit découvert")
+- Termine par UN conseil applicable immédiatement
+- Si tu doutes d'un timestamp : supprime-le
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 {
-  "summary": "Bilan global de 4-5 phrases : niveau général sur ${hero}, points forts du kit utilisés, axes d'amélioration prioritaires sur le kit",
+  "summary": "3-4 phrases basées sur des patterns répétés observés dans la VOD. Cite des moments précis. Ne généralise pas.",
   "timestamps": [
     {
       "time": "MM:SS",
       "category": "death|mistake|positioning|ulti|good",
-      "title": "Titre court mentionnant le cooldown/ressource impliqué",
-      "description": "Ce qui s'est passé avec quel cooldown/ressource, pourquoi c'est bien/mal, conseil concret et spécifique à ${hero}"
+      "title": "Capacité ou action — conséquence courte",
+      "description": "Ce qui est visible à l'écran, capacité impliquée, conséquence, conseil concret."
     }
   ],
   "priorities": [
-    "Point kit #1 le plus important à améliorer sur ${hero} avec conseil concret",
-    "Point kit #2 avec conseil concret",
-    "Point kit #3 avec conseil concret"
+    "Erreur répétée #1 observée PLUSIEURS fois dans la VOD — conseil",
+    "Erreur répétée #2 — conseil",
+    "Point fort ou axe d'amélioration secondaire — conseil"
   ]
 }
 
-Identifie 8 à 12 moments clés significatifs. Priorise les moments où le kit est mal utilisé.`;
+Nombre de timestamps : entre 5 et 10. Qualité > quantité. Zéro invention.`;
   }
 
   async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
