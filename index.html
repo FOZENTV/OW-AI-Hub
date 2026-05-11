@@ -143,6 +143,38 @@
     .upload-sub { font-size: 12px; color: var(--text2); }
     .upload-info { font-size: 13px; color: var(--green); margin-top: 10px; font-weight: 500; }
 
+    /* ── Video player ── */
+    .video-wrap {
+      display: none;
+      margin-bottom: 20px;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    .video-wrap.visible { display: block; }
+    .video-wrap video {
+      width: 100%;
+      max-height: 420px;
+      display: block;
+      background: #000;
+    }
+    .video-label {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      background: rgba(0,0,0,0.6);
+      padding: 3px 8px;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
     /* ── Config row ── */
     .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
     .config-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; }
@@ -303,6 +335,12 @@
     <div class="upload-info" id="fileInfo"></div>
   </div>
 
+  <!-- Lecteur VOD intégré -->
+  <div class="video-wrap" id="videoWrap">
+    <div class="video-label">VOD</div>
+    <video id="videoPlayer" controls preload="metadata"></video>
+  </div>
+
   <div class="config-row">
     <div class="config-block">
       <div class="config-label">Personnage</div>
@@ -446,6 +484,13 @@
     const mb = (file.size / 1024 / 1024).toFixed(0);
     document.getElementById('fileInfo').textContent = `✓ ${file.name} — ${mb} Mo`;
     uploadZone.classList.add('has-file');
+
+    // Charger la vidéo dans le lecteur
+    const player = document.getElementById('videoPlayer');
+    const wrap   = document.getElementById('videoWrap');
+    if (player.src) URL.revokeObjectURL(player.src); // libérer l'ancien blob
+    player.src = URL.createObjectURL(file);
+    wrap.classList.add('visible');
   }
 
   /* ─────────────────────────────────────────
@@ -471,6 +516,14 @@
     fileInput.value = '';
     document.getElementById('fileInfo').textContent = '';
     uploadZone.classList.remove('has-file');
+
+    // Vider le lecteur vidéo
+    const player = document.getElementById('videoPlayer');
+    const wrap   = document.getElementById('videoWrap');
+    if (player.src) URL.revokeObjectURL(player.src);
+    player.src = '';
+    wrap.classList.remove('visible');
+
     hideResults(); hideProgress(); hideError();
   }
 
