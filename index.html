@@ -528,47 +528,62 @@
   }
 
   /* ─────────────────────────────────────────
-     GEMINI FILES API — upload direct depuis le navigateur
+     RENDER SERVER — un seul appel
   ───────────────────────────────────────── */
 
-  const BASE = 'https://generativelanguage.googleapis.com';
+  const SERVER_URL = 'https://ow-ai-hub.onrender.com';
 
-  async function uploadToGemini(apiKey, file) {
-    const mb = (file.size / 1024 / 1024).toFixed(0);
-    setProgress(30, `Upload en cours… (${mb} Mo)`);
+  /* ─────────────────────────────────────────
+     ANALYZE — action principale
+  ───────────────────────────────────────── */
 
-    // Multipart upload — on passe le File directement (pas d'arrayBuffer)
-    // évite de charger tout en RAM d'un coup
-    const metadata = JSON.stringify({ file: { display_name: file.name } });
-    const body = new FormData();
-    body.append('metadata', new Blob([metadata], { type: 'application/json' }));
-    body.append('file', file, file.name); // File object direct, pas de arrayBuffer
+  async function analyze() {
+    hideError();
 
-    const res = await fetch(
-      `${BASE}/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,
-      { method: 'POST', body }
-    );
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const hero   = document.getElementById('heroSelect').value;
+    const rank   = document.getElementById('rankSelect').value;
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || 'Erreur upload : ' + res.status);
+    if (!apiKey)       return showError('Entre ta clé API Gemini.');
+    if (!selectedFile) return showError('Sélectionne une VOD.');
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    showProgress();
+    hideResults();
+
+    try {
+      setProgress(10, 'Envoi de la vidéo au serveur…');
+
+      const body = new FormData();
+      body.append('video',   selectedFile, selectedFile.name);
+      body.append('api_key', apiKey);
+      body.append('hero',    hero);
+      body.append('rank',    rank);
+
+      setProgress(30, `Upload en cours… (${(selectedFile.size/1024/1024).toFixed(0)} Mo)`);
+
+      const res = await fetch(`${SERVER_URL}/analyze`, { method: 'POST', body });
+
+      setProgress(80, 'Analyse IA en cours…');
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erreur serveur : ' + res.status);
+      }
+
+      const parsed = await res.json();
+      setProgress(100, 'Analyse terminée !');
+      renderResults(parsed);
+
+    } catch (err) {
+      showError('Erreur : ' + err.message);
+      hideProgress();
+    } finally {
+      btn.disabled = false;
     }
-
-    const data = await res.json();
-    return data.file;
   }
 
-  async function waitForActive(apiKey, fileName) {
-    setProgress(55, 'Traitement de la vidéo par Gemini…');
-    for (let i = 0; i < 30; i++) {
-      const res  = await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`);
-      const data = await res.json();
-      if (data.state === 'ACTIVE') return data;
-      if (data.state === 'FAILED') throw new Error('Traitement vidéo échoué côté Gemini');
-      await new Promise(r => setTimeout(r, 3000));
-    }
-    throw new Error('Timeout — la vidéo met trop longtemps à traiter');
-  }
 
   /* ─────────────────────────────────────────
      HERO CONTEXT — kit complet par héros
@@ -714,82 +729,6 @@ Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 Nombre de timestamps : entre 5 et 10. Qualité > quantité. Zéro invention.`;
   }
 
-  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
-    setProgress(75, 'Analyse IA en cours…');
-
-    const prompt = buildPrompt(hero, rank);
-
-    const res = await fetch(
-      `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { file_data: { file_uri: fileUri, mime_type: fileMime } },
-              { text: prompt },
-            ],
-          }],
-        }),
-      }
-    );
-
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-
-    const raw = data.candidates[0].content.parts[0].text
-      .replace(/```json|```/g, '').trim();
-    return JSON.parse(raw);
-  }
-
-  async function deleteFile(apiKey, fileName) {
-    try {
-      await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`, { method: 'DELETE' });
-    } catch {}
-  }
-
-  /* ─────────────────────────────────────────
-     ANALYZE — action principale
-  ───────────────────────────────────────── */
-
-  async function analyze() {
-    hideError();
-
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const hero   = document.getElementById('heroSelect').value;
-    const rank   = document.getElementById('rankSelect').value;
-
-    if (!apiKey)       return showError('Entre ta clé API Gemini.');
-    if (!selectedFile) return showError('Sélectionne une VOD.');
-
-    const btn = document.getElementById('analyzeBtn');
-    btn.disabled = true;
-    showProgress();
-    hideResults();
-
-    let uploadedFileName = null;
-
-    try {
-      setProgress(10, 'Connexion à Gemini…');
-
-      const fileInfo = await uploadToGemini(apiKey, selectedFile);
-      uploadedFileName = fileInfo.name;
-
-      const activeFile = await waitForActive(apiKey, fileInfo.name);
-      const parsed = await generateAnalysis(apiKey, activeFile.uri, selectedFile.type, hero, rank);
-
-      setProgress(100, 'Analyse terminée !');
-      renderResults(parsed);
-
-    } catch (err) {
-      showError('Erreur : ' + err.message);
-      hideProgress();
-    } finally {
-      btn.disabled = false;
-      if (uploadedFileName) deleteFile(apiKey, uploadedFileName);
-    }
-  }
 
   /* ─────────────────────────────────────────
      RENDER RESULTS
