@@ -144,44 +144,54 @@ CONTEXTE :
 - Profil du rang : ${rankTips}
 - Spécificités du héros : ${heroTips}
 
-ÉTAPE 1 — LECTURE VIDÉO OBLIGATOIRE
-Regarde la vidéo entière AVANT de répondre. Lis l'horodatage visible à l'écran à chaque moment important. Ne JAMAIS inventer un timestamp — si tu n'es pas sûr du temps exact, indique "~MM:SS".
+════════════════════════════════════════
+PHASE 1 — OBSERVATION (obligatoire avant tout)
+════════════════════════════════════════
+Avant d'analyser, tu DOIS identifier ces éléments en regardant la vidéo :
+- La map et le mode de jeu visible à l'écran
+- Les héros ENNEMIS présents (lis leurs noms dans le kill feed ou sur les modèles 3D)
+- Les héros ALLIÉS présents
+- La durée totale de la vidéo (lis l'horodatage à la fin)
+- Le score ou l'état de la partie
 
-ÉTAPE 2 — CE QUE TU DOIS OBSERVER CONCRÈTEMENT
-Pour chaque moment que tu rapportes, tu dois avoir réellement vu dans la vidéo :
-- L'action exacte du joueur (mouvement, compétence utilisée, cible visée)
-- L'état des cooldowns visibles à l'écran
-- La position du joueur par rapport aux ennemis et aux alliés
-- Le résultat immédiat (kill, mort, teamfight gagné/perdu)
+NE MENTIONNE JAMAIS un héros que tu n'as pas vu dans la vidéo.
+NE MENTIONNE JAMAIS un moment à un timestamp si tu n'as pas vu l'horodatage à l'écran.
 
-RÈGLE ABSOLUE : Si tu n'as pas réellement vu quelque chose dans la vidéo, ne le mentionne pas. Moins de timestamps mais vrais vaut mieux que beaucoup d'inventés.
+════════════════════════════════════════
+PHASE 2 — ANALYSE DES MOMENTS CLÉS
+════════════════════════════════════════
+Pour chaque moment que tu rapportes :
+✓ Tu as vu l'horodatage à l'écran (MM:SS visible dans le coin)
+✓ Tu décris l'action exacte du joueur (pas une hypothèse)
+✓ Tu nommes uniquement des héros présents dans la partie
+✓ Tu décris le résultat concret visible dans la vidéo
 
 CATÉGORIES :
-- death : mort que tu as vue — décris exactement comment elle s'est produite
-- mistake : erreur que tu as vue — quel CD raté, quelle mauvaise cible
-- positioning : mauvais placement que tu as vu — où était le joueur, où il aurait dû être
-- ulti : usage d'ulti que tu as vu — quand, sur combien d'ennemis, quel résultat
-- good : bon play que tu as vu — ce qui était bien et pourquoi
+- death : tu as vu le joueur mourir — décris par qui et comment
+- mistake : tu as vu une erreur concrète — quel CD, quelle mauvaise cible
+- positioning : tu as vu un mauvais placement — où était-il, où aurait-il dû être
+- ulti : tu as vu un ulti utilisé — sur combien d'ennemis, quel résultat visible
+- good : tu as vu un bon play — décris ce qui s'est passé
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
 {
-  "summary": "Diagnostic basé sur ce que tu as réellement observé : niveau constaté, patterns récurrents, point fort dominant, erreur la plus fréquente",
+  "summary": "Commence par : 'Sur cette VOD [map] en [mode], le joueur joue [hero] contre [héros ennemis observés]...' puis bilan : niveau constaté, pattern dominant, point fort, erreur principale",
   "timestamps": [
     {
       "time": "MM:SS",
       "category": "death|mistake|positioning|ulti|good",
-      "title": "Action concrète observée à ce moment",
-      "description": "Décris exactement ce que tu as vu : l'action, le contexte, pourquoi c'est bien ou mal, conseil concret. Jargon si pertinent : LoS, Peel, Off-angle, Dry Fight, C9, Stagger."
+      "title": "Action concrète et précise observée",
+      "description": "Ce que tu as réellement vu : action du joueur, contexte (quels ennemis, quelle situation), résultat visible, conseil concret. Nomme uniquement les héros présents dans la partie."
     }
   ],
   "priorities": [
-    "🔧 Priorité mécanique : basée sur les erreurs répétées observées",
-    "🧠 Priorité tactique : basée sur les patterns de décision observés",
-    "⚔️ Conseil matchup : basé sur les adversaires réellement vus dans la vidéo"
+    "🔧 Priorité mécanique : basée sur les erreurs répétées observées dans cette VOD",
+    "🧠 Priorité tactique : basée sur les patterns de décision vus dans cette VOD",
+    "⚔️ Conseil matchup : basé sur les héros ennemis réellement présents dans cette VOD"
   ]
 }
 
-Identifie 6 à 12 moments clés que tu as RÉELLEMENT observés. Qualité et honnêteté avant quantité.`;
+Identifie 5 à 10 moments. Si tu n'es pas certain d'un timestamp, écris '~MM:SS'. Moins de moments mais vrais vaut mieux que beaucoup d'inventés.`;
 }
 
 // ─────────────────────────────────────────
