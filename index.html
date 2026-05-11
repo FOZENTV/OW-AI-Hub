@@ -7,798 +7,187 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-
-    /* ─────────────────────────────────────────
-       DESIGN TOKENS
-    ───────────────────────────────────────── */
     :root {
-      --bg:       #0a0c10;
-      --bg2:      #0f1218;
-      --bg3:      #161b24;
-      --border:   #1e2530;
-      --border2:  #2a3342;
-      --accent:   #f5a623;
-      --blue:     #4a9eff;
-      --green:    #3ecf8e;
-      --red:      #ff4d6d;
-      --purple:   #a78bfa;
-      --text:     #e8edf5;
-      --text2:    #8b95a8;
-      --text3:    #4a5568;
-      --font-display: 'Rajdhani', sans-serif;
-      --font-body:    'Inter', sans-serif;
+      --bg: #0a0c10; --bg2: #0f1218; --bg3: #161b24; --border: #1e2530; --border2: #2a3342;
+      --accent: #f5a623; --blue: #4a9eff; --green: #3ecf8e; --red: #ff4d6d; --purple: #a78bfa;
+      --text: #e8edf5; --text2: #8b95a8; --font-display: 'Rajdhani', sans-serif; --font-body: 'Inter', sans-serif;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
-      pointer-events: none;
-      z-index: 999;
-    }
-
-    /* ── Header ── */
-    .header {
-      padding: 20px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg2);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .logo {
-      font-family: var(--font-display);
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .logo span { color: var(--text3); font-weight: 500; }
-    .badge {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      color: var(--text3);
-    }
-
-    /* ── Layout ── */
-    .main { padding: 28px 32px; max-width: 900px; margin: 0 auto; }
-
-    /* ── Form elements ── */
-    input[type="password"], input[type="text"], select {
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      padding: 7px 12px;
-      font-size: 13px;
-      color: var(--text);
-      outline: none;
-      font-family: var(--font-body);
-      transition: border-color 0.2s;
-    }
-    input[type="password"]:focus, input[type="text"]:focus, select:focus { border-color: var(--accent); }
-    input[type="password"]::placeholder { color: var(--text3); }
-    select option { background: var(--bg3); }
-    input[type="file"] { display: none; }
-
-    /* ── API Row ── */
-    .api-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 18px;
-    }
-    .api-row label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text2);
-      white-space: nowrap;
-    }
-    .api-row a { color: var(--blue); font-size: 12px; text-decoration: none; }
-    .api-row a:hover { text-decoration: underline; }
-
-    /* ── Upload zone ── */
-    .upload-zone {
-      border: 1.5px dashed var(--border2);
-      border-radius: 10px;
-      padding: 40px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      background: var(--bg2);
-      margin-bottom: 20px;
-    }
-    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(245,166,35,0.04); }
-    .upload-zone.has-file { border-style: solid; border-color: var(--green); background: rgba(62,207,142,0.04); }
-    .upload-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.35; }
-    .upload-title {
-      font-family: var(--font-display);
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-    .upload-sub { font-size: 12px; color: var(--text2); }
-    .upload-info { font-size: 13px; color: var(--green); margin-top: 10px; font-weight: 500; }
-
-    /* ── Video player ── */
-    .video-wrap {
-      display: none;
-      margin-bottom: 20px;
-      background: #000;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-    .video-wrap.visible { display: block; }
-    .video-wrap video {
-      width: 100%;
-      max-height: 420px;
-      display: block;
-      background: #000;
-    }
-    .video-label {
-      position: absolute;
-      top: 10px;
-      left: 12px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      background: rgba(0,0,0,0.6);
-      padding: 3px 8px;
-      border-radius: 3px;
-      pointer-events: none;
-    }
-
-    /* ── Config row ── */
-    .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-    .config-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; }
-    .config-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 7px;
-    }
-
-    /* ── Error ── */
-    .error-box {
-      background: rgba(255,77,109,0.08);
-      border: 1px solid rgba(255,77,109,0.25);
-      border-radius: 7px;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--red);
-      display: none;
-      margin-bottom: 14px;
-    }
-    .error-box.visible { display: block; }
-
-    /* ── Analyze button ── */
-    .analyze-btn {
-      width: 100%;
-      padding: 13px;
-      background: var(--accent);
-      border: none;
-      border-radius: 7px;
-      font-family: var(--font-display);
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #0a0c10;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
-      margin-bottom: 24px;
-    }
-    .analyze-btn:hover:not(:disabled) { background: #e8962a; transform: translateY(-1px); }
-    .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    /* ── Progress ── */
-    .progress-wrap { display: none; margin-bottom: 24px; }
-    .progress-wrap.visible { display: block; }
-    .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--blue));
-      width: 0%;
-      transition: width 0.5s;
-      border-radius: 2px;
-    }
-    .progress-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
-    .blink-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-    /* ── Results ── */
-    .results { display: none; }
-    .results.visible { display: block; }
-    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .results-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-    .reset-btn {
-      padding: 6px 14px;
-      background: none;
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      font-size: 12px;
-      color: var(--text2);
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .reset-btn:hover { border-color: var(--text2); color: var(--text); }
-
-    /* ── Summary ── */
-    .summary-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin-bottom: 20px;
-    }
-    .summary-card h3 {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-    .summary-text { font-size: 13px; line-height: 1.75; color: var(--text2); }
-    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
-
-    /* ── Timestamps ── */
-    .ts-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-    .ts-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; }
-    .ts-head:hover { background: rgba(255,255,255,0.02); }
-    .ts-time { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--accent); min-width: 48px; letter-spacing: 0.04em; }
-    .ts-category { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; }
-    .cat-death       { background: rgba(255,77,109,0.12);  color: var(--red);    border: 1px solid rgba(255,77,109,0.25); }
-    .cat-mistake     { background: rgba(245,166,35,0.10);  color: var(--accent); border: 1px solid rgba(245,166,35,0.20); }
-    .cat-good        { background: rgba(62,207,142,0.10);  color: var(--green);  border: 1px solid rgba(62,207,142,0.20); }
-    .cat-positioning { background: rgba(74,158,255,0.10);  color: var(--blue);   border: 1px solid rgba(74,158,255,0.20); }
-    .cat-ulti        { background: rgba(167,139,250,0.10); color: var(--purple); border: 1px solid rgba(167,139,250,0.20); }
-    .ts-title { font-size: 13px; font-weight: 500; flex: 1; color: var(--text); }
-    .ts-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
-    .ts-body { padding: 12px 16px; font-size: 13px; line-height: 1.7; color: var(--text2); border-top: 1px solid var(--border); display: none; }
-    .ts-body.open { display: block; }
-
-    /* ── Priorities ── */
-    .priorities-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--blue);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin-top: 20px;
-    }
-    .priorities-card h3 {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 12px;
-    }
-    .priority-item { display: flex; gap: 10px; margin-bottom: 9px; }
-    .priority-num { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text3); min-width: 18px; }
-    .priority-text { font-size: 13px; line-height: 1.65; color: var(--text2); }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.6; }
+    .app-container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+    header { text-align: center; margin-bottom: 40px; }
+    h1 { font-family: var(--font-display); font-size: 2.5rem; text-transform: uppercase; color: var(--accent); }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+    .grid-setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+    label { display: block; font-family: var(--font-display); font-size: 0.9rem; color: var(--text2); margin-bottom: 5px; }
+    input, select { width: 100%; background: var(--bg3); border: 1px solid var(--border2); padding: 10px; color: #fff; border-radius: 6px; }
+    .upload-box { border: 2px dashed var(--border2); border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; position: relative; }
+    .upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .btn-primary { display: block; width: 100%; background: var(--accent); color: #000; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; padding: 15px; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+    .btn-primary:disabled { opacity: 0.4; }
+    #progressSection { display: none; text-align: center; }
+    .loader { width: 40px; height: 40px; border: 3px solid #FFF; border-bottom-color: var(--accent); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #resultsSection { display: none; }
+    .summary-card { background: var(--bg3); border-left: 4px solid var(--accent); padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+    .ts-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+    .ts-head { display: flex; align-items: center; padding: 12px 15px; cursor: pointer; gap: 15px; }
+    .ts-time { font-family: var(--font-display); font-weight: 700; color: var(--accent); background: rgba(245, 166, 35, 0.1); padding: 2px 8px; border-radius: 4px; }
+    .ts-category { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
+    .cat-death { background: rgba(255, 77, 109, 0.2); color: var(--red); }
+    .cat-mistake { background: rgba(245, 166, 35, 0.2); color: var(--accent); }
+    .cat-good { background: rgba(62, 207, 142, 0.2); color: var(--green); }
+    .ts-body { display: none; padding: 15px 15px 15px 60px; color: var(--text2); border-top: 1px solid var(--border); font-size: 0.9rem; }
+    .priority-item { background: var(--bg3); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border2); }
   </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="logo">OW <span>/</span> VOD Analyzer</div>
-  <div class="badge">Client-side · Gemini</div>
-</header>
+  <div class="app-container">
+    <header>
+      <h1>OW <span style="color:#fff">VOD</span> ANALYZER</h1>
+      <p style="color:var(--text2)">Coach Neural Top 500</p>
+    </header>
 
-<main class="main">
-
-  <div class="api-row">
-    <label for="apiKey">Clé API Gemini</label>
-    <input type="password" id="apiKey" placeholder="AIza..." style="flex:1">
-    <a href="https://aistudio.google.com/app/apikey" target="_blank">Obtenir une clé ↗</a>
-  </div>
-
-  <input type="file" id="fileInput" accept="video/*">
-  <div class="upload-zone" id="uploadZone">
-    <div class="upload-icon">🎬</div>
-    <div class="upload-title">Dépose ta VOD ici</div>
-    <div class="upload-sub">MP4, MOV — jusqu'à 2 Go</div>
-    <div class="upload-info" id="fileInfo"></div>
-  </div>
-
-  <!-- Lecteur VOD intégré -->
-  <div class="video-wrap" id="videoWrap">
-    <div class="video-label">VOD</div>
-    <video id="videoPlayer" controls preload="metadata"></video>
-  </div>
-
-  <div class="config-row">
-    <div class="config-block">
-      <div class="config-label">Personnage</div>
-      <select id="heroSelect" style="width:100%"></select>
+    <div id="setupSection" class="card">
+      <div class="grid-setup">
+        <div>
+          <label>Clé API Gemini</label>
+          <input type="password" id="apiKey" placeholder="Votre clé...">
+        </div>
+        <div>
+          <label>Héros</label>
+          <select id="heroSelect"><option>Chargement...</option></select>
+        </div>
+        <div>
+          <label>Rang</label>
+          <select id="rankSelect">
+            <option>Bronze</option><option>Argent</option><option>Or</option><option>Platine</option>
+            <option>Diamant</option><option>Master</option><option>Grand Master</option>
+          </select>
+        </div>
+      </div>
+      <div class="upload-box">
+        <input type="file" id="videoFile" accept="video/*">
+        <p id="fileStatus">Cliquez pour ajouter votre VOD (MP4)</p>
+      </div>
+      <button id="analyzeBtn" class="btn-primary" disabled>Lancer l'Analyse</button>
     </div>
-    <div class="config-block">
-      <div class="config-label">Rank</div>
-      <select id="rankSelect" style="width:100%"></select>
-    </div>
-  </div>
 
-  <div class="error-box" id="errorBox"></div>
-  <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ Analyser la VOD</button>
-
-  <div class="progress-wrap" id="progressWrap">
-    <div class="progress-track">
-      <div class="progress-bar" id="progressBar"></div>
+    <div id="progressSection" class="card">
+      <span class="loader"></span>
+      <p id="statusMsg" style="margin-top:15px; color:var(--accent); font-family:var(--font-display)">Analyse des pixels en cours...</p>
     </div>
-    <div class="progress-status">
-      <div class="blink-dot"></div>
-      <span id="progressStatus">Chargement...</span>
+
+    <div id="resultsSection">
+      <div class="summary-card"><p id="summaryText"></p></div>
+      <div id="timestampList"></div>
+      <div id="priorityList" style="margin-top:20px;"></div>
+      <button onclick="location.reload()" class="btn-primary" style="background:none; border:1px solid var(--border2); color:var(--text2)">Nouvelle VOD</button>
     </div>
   </div>
 
-  <div class="results" id="results">
-    <div class="results-header">
-      <div class="results-title">Rapport de coaching</div>
-      <button class="reset-btn" onclick="resetForm()">Nouvelle analyse</button>
-    </div>
-    <div class="summary-card">
-      <h3>Résumé global</h3>
-      <div class="summary-text" id="summaryText"></div>
-    </div>
-    <div class="section-label">Moments clés</div>
-    <div id="timestampList"></div>
-    <div class="priorities-card">
-      <h3>Priorités à travailler</h3>
-      <div id="priorityList"></div>
-    </div>
-  </div>
+  <script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-</main>
+    const CATEGORIES = {
+      death: { label: "Mort", cssClass: "cat-death" },
+      mistake: { label: "Erreur", cssClass: "cat-mistake" },
+      good: { label: "Top", cssClass: "cat-good" },
+      positioning: { label: "Position", cssClass: "cat-mistake" },
+      ulti: { label: "Ultime", cssClass: "cat-good" }
+    };
 
-<script>
+    let selectedFile = null;
 
-  /* ─────────────────────────────────────────
-     CONFIG
-  ───────────────────────────────────────── */
-
-  const GEMINI_MODEL = 'gemini-2.5-flash'; // Modèle à changer ici si besoin
-
-  const RANKS = [
-    'Bronze', 'Argent', 'Or', 'Platine', 'Diamant',
-    'Maître', 'Grand Maître', 'Champion', 'Top 500',
-  ];
-  const DEFAULT_RANK = 'Diamant';
-  const DEFAULT_HERO = 'Tracer';
-
-  // Pour ajouter une catégorie : ajouter ici + règle CSS .cat-xxx
-  const CATEGORIES = {
-    death:       { label: 'Mort',       cssClass: 'cat-death' },
-    mistake:     { label: 'Erreur',     cssClass: 'cat-mistake' },
-    good:        { label: 'Bon moment', cssClass: 'cat-good' },
-    positioning: { label: 'Position',   cssClass: 'cat-positioning' },
-    ulti:        { label: 'Ulti',       cssClass: 'cat-ulti' },
-  };
-
-  // Pour ajouter un héros : ajouter dans la bonne liste
-  const HEROES = {
-    Tank: [
-      'D.Va', 'Domina', 'Doomfist', 'Hazard', 'Junker Queen', 'Mauga',
-      'Orisa', 'Ramattra', 'Reinhardt', 'Roadhog', 'Sigma', 'Winston',
-      'Wrecking Ball', 'Zarya',
-    ],
-    Damage: [
-      'Anran', 'Ashe', 'Bastion', 'Cassidy', 'Echo', 'Emre', 'Freja',
-      'Genji', 'Hanzo', 'Junkrat', 'Mei', 'Pharah', 'Reaper', 'Sierra',
-      'Sojourn', 'Soldier: 76', 'Sombra', 'Symmetra', 'Torbjörn',
-      'Tracer', 'Vendetta', 'Venture', 'Widowmaker',
-    ],
-    Support: [
-      'Ana', 'Baptiste', 'Brigitte', 'Illari', 'Jetpack Cat', 'Juno',
-      'Kiriko', 'Lifeweaver', 'Lúcio', 'Mercy', 'Mizuki', 'Moira',
-      'Wuyang', 'Zenyatta',
-    ],
-  };
-
-  const HEROES_FLAT = Object.entries(HEROES)
-    .flatMap(([cls, heroes]) => [...heroes].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })));
-
-  /* ─────────────────────────────────────────
-     INIT
-  ───────────────────────────────────────── */
-
-  function initSelects() {
-    const rankSel = document.getElementById('rankSelect');
-    RANKS.forEach(r => {
-      const o = document.createElement('option');
-      o.value = r; o.textContent = r;
-      if (r === DEFAULT_RANK) o.selected = true;
-      rankSel.appendChild(o);
-    });
-
-    const heroSel = document.getElementById('heroSelect');
-    const CLASS_ICONS = { Tank: '🛡️ Tank', Damage: '⚔️ Damage', Support: '💚 Support' };
-    Object.entries(HEROES).forEach(([className, heroes]) => {
-      const group = document.createElement('optgroup');
-      group.label = CLASS_ICONS[className] || className;
-      [...heroes].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })).forEach(h => {
-        const o = document.createElement('option');
-        o.value = h; o.textContent = h;
-        if (h === DEFAULT_HERO) o.selected = true;
-        group.appendChild(o);
-      });
-      heroSel.appendChild(group);
-    });
-  }
-
-  initSelects();
-
-  /* ─────────────────────────────────────────
-     UPLOAD ZONE
-  ───────────────────────────────────────── */
-
-  let selectedFile = null;
-  const uploadZone = document.getElementById('uploadZone');
-  const fileInput  = document.getElementById('fileInput');
-
-  uploadZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
-  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag');
-    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-  });
-
-  function setFile(file) {
-    selectedFile = file;
-    const mb = (file.size / 1024 / 1024).toFixed(0);
-    document.getElementById('fileInfo').textContent = `✓ ${file.name} — ${mb} Mo`;
-    uploadZone.classList.add('has-file');
-
-    // Charger la vidéo dans le lecteur
-    const player = document.getElementById('videoPlayer');
-    const wrap   = document.getElementById('videoWrap');
-    if (player.src) URL.revokeObjectURL(player.src); // libérer l'ancien blob
-    player.src = URL.createObjectURL(file);
-    wrap.classList.add('visible');
-  }
-
-  /* ─────────────────────────────────────────
-     UI HELPERS
-  ───────────────────────────────────────── */
-
-  function setProgress(pct, text) {
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressStatus').textContent = text;
-  }
-  function showError(msg) {
-    const b = document.getElementById('errorBox');
-    b.textContent = msg; b.classList.add('visible');
-  }
-  function hideError() { document.getElementById('errorBox').classList.remove('visible'); }
-  function showProgress() { document.getElementById('progressWrap').classList.add('visible'); }
-  function hideProgress() { document.getElementById('progressWrap').classList.remove('visible'); }
-  function showResults() { document.getElementById('results').classList.add('visible'); }
-  function hideResults() { document.getElementById('results').classList.remove('visible'); }
-
-  function resetForm() {
-    selectedFile = null;
-    fileInput.value = '';
-    document.getElementById('fileInfo').textContent = '';
-    uploadZone.classList.remove('has-file');
-
-    // Vider le lecteur vidéo
-    const player = document.getElementById('videoPlayer');
-    const wrap   = document.getElementById('videoWrap');
-    if (player.src) URL.revokeObjectURL(player.src);
-    player.src = '';
-    wrap.classList.remove('visible');
-
-    hideResults(); hideProgress(); hideError();
-  }
-
-  /* ─────────────────────────────────────────
-     GEMINI FILES API — upload direct depuis le navigateur
-  ───────────────────────────────────────── */
-
-  const BASE = 'https://generativelanguage.googleapis.com';
-
-  async function uploadToGemini(apiKey, file) {
-    setProgress(30, `Upload en cours… (${(file.size/1024/1024).toFixed(0)} Mo)`);
-
-    // Upload multipart — pas de headers custom, compatible CORS navigateur
-    const metadata = JSON.stringify({ file: { display_name: file.name } });
-    const body = new FormData();
-    body.append('metadata', new Blob([metadata], { type: 'application/json' }));
-    body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }));
-
-    const res = await fetch(
-      `${BASE}/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,
-      { method: 'POST', body }
-    );
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || 'Erreur upload : ' + res.status);
+    async function init() {
+      try {
+        const res = await fetch('/heroes');
+        const data = await res.json();
+        document.getElementById('heroSelect').innerHTML = data.map(h => `<option value="${h}">${h}</option>`).join('');
+      } catch (e) { console.error("Erreur heroes:", e); }
     }
+    init();
 
-    const data = await res.json();
-    return data.file; // { name, uri, state, ... }
-  }
-
-  async function waitForActive(apiKey, fileName) {
-    setProgress(55, 'Traitement de la vidéo par Gemini…');
-    for (let i = 0; i < 30; i++) {
-      const res  = await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`);
-      const data = await res.json();
-      if (data.state === 'ACTIVE') return data;
-      if (data.state === 'FAILED') throw new Error('Traitement vidéo échoué côté Gemini');
-      await new Promise(r => setTimeout(r, 3000));
-    }
-    throw new Error('Timeout — la vidéo met trop longtemps à traiter');
-  }
-
-  /* ─────────────────────────────────────────
-     HERO CONTEXT — kit complet par héros
-  ───────────────────────────────────────── */
-
-  const HERO_CONTEXT = {
-    // ── TANK ──
-    'D.Va':          "Kit: Boosters (dash), Defense Matrix (mange les projectiles), Micro Missiles, Self-Destruct (ulti). Points clés: timing Defense Matrix sur les ultis ennemis critiques (Sound Barrier, Coalescence…), usage offensif vs défensif des Boosters, placement du Self-Destruct pour forcer repositionnement, gestion du remech (ne pas mourir hors mech inutilement).",
-    'Domina':        "Héros récent. Analyser: usage des capacités de contrôle, positionnement en tant que tank, timing des engagements et des retraites, coordination avec les supports.",
-    'Doomfist':      "Kit: Seismic Slam, Rocket Punch (charge), Power Block (parry → Meteor Strike empowered). Points clés: combos pour burst (Slam+Punch), Power Block timing sur gros dégâts, Meteor Strike pour repositionnement ou engage, survie via les boucliers générés par les dégâts.",
-    'Hazard':        "Héros récent. Analyser: kit de mobilité, engagement/disengage, usage des cooldowns défensifs, pression sur les backlines.",
-    'Junker Queen': "Kit: Carnage (hache, wound), Commanding Shout (ulti pseudo), Jagged Blade (recall), Rampage (ulti). Points clés: maintenir les wounds actifs pour le sustain, Commanding Shout pour engage ou disengage, Rampage timing pour anti-heal sur cibles critiques, agressivité contrôlée.",
-    'Mauga':         "Kit: deux chainguns (Incendiary + Volatile), Cardiac Overdrive (sustain), Cage Fight (ulti). Points clés: gestion des deux modes de chaingun, Cardiac Overdrive timing (offense vs defense), Cage Fight placement pour isoler un ennemi, sustain via les dégâts enflammés.",
-    'Orisa':         "Kit: Javelin Spin (bloque projectiles + push), Energy Javelin (stun), Fortify (invulnérabilité partielle + CC immunity), Terra Surge (ulti charge). Points clés: Fortify sur les ultis ennemis, combo Javelin stun + Terra Surge, Spin pour traverser les chokes, pression constante sans overextend.",
-    'Ramattra':      "Kit: Nemesis Form (bras de mêlée + shield), Void Accelerator (projectiles), Annihilation (ulti). Points clés: switch Nemesis Form au bon moment (engage vs sustain), Annihilation pour hold un point ou teamfight, positionnement pour maximiser les hits en Nemesis, coordination avec les supports pour survivre en forme.",
-    'Reinhardt':     "Kit: Barrier Field (shield 1600 HP), Rocket Hammer, Fire Strike, Charge, Earthshatter (ulti). Points clés: shield management (ne jamais le casser inutilement), Fire Strike à travers le shield pour harcèlement, Charge usage (situationnel, très risqué), Earthshatter setup (flanc, après Graviton, après Sound Barrier).",
-    'Roadhog':       "Kit: Chain Hook (pull + stun), Take A Breather (self-heal), Scrap Gun, Whole Hog (ulti). Points clés: Hook accuracy et target prioritization (sniper, support isolé), combo Hook → melee → Scrap Gun pour one-shot, Take A Breather timing (pas pendant un duel), Whole Hog pour push ou zone control.",
-    'Sigma':         "Kit: Hyperspheres, Kinetic Grasp (absorb projectiles → shield), Accretion (rock stun), Experimental Barrier (shield repositionnable), Gravitic Flux (ulti). Points clés: Kinetic Grasp timing sur les ultis (Barrage, Blizzard), placement du shield flottant, Accretion precision sur cibles prioritaires, Flux combo (avec Shatter, Graviton, Coalescence).",
-    'Winston':       "Kit: Tesla Cannon (AoE), Jump Pack (leap + AoE landing), Barrier Projector (bulles), Primal Rage (ulti). Points clés: cibles de dive (éliminer le support isolé, pas le tank), barrier placement pour protection pendant le dive, Primal Rage pour survive ou disengage d'urgence, coordination avec le deuxième dive.",
-    'Wrecking Ball': "Kit: Grappling Claw (swing + vitesse), Roll (boule), Pile Driver (slam AoE), Adaptive Shield (bouclier scalable), Minefield (ulti). Points clés: générer des boucliers en touchant beaucoup d'ennemis, Pile Driver sur clusters, Minefield en zone contest ou derrière l'ennemi, ne jamais rester statique.",
-    'Zarya':         "Kit: Particle Cannon (beam + orbs), Particle Barrier (bulles soi + allié), Graviton Surge (ulti). Points clés: timing des bulles (anticipation des dégâts, pas réaction tardive), maintenir haute énergie pour maximiser les dégâts, Graviton Surge combo (avec Dragonblade, Blizzard, Earthshatter, Flux), bulle sur les alliés en danger critique.",
-
-    // ── DAMAGE ──
-    'Anran':         "Héros récent. Analyser: précision des dégâts, gestion des cooldowns, positionnement safe vs aggressif, impact sur le teamfight.",
-    'Ashe':          "Kit: Viper (semi-auto/ADS), Coach Gun (knockback soi), Dynamite (AoE + feu), B.O.B. (ulti turret). Points clés: ADS headshots consistency, Dynamite placement (préemptif, pas réactif), Coach Gun pour disengage ou hauteur, B.O.B. placement (doorway, angle inattendu pour maximum disruption).",
-    'Bastion':       "Kit: Configuration Recon (mobile), Configuration Assault (minigun), Reconfigure (self-heal), A-36 Tactical Grenade, Artillerie (ulti). Points clés: switch Assault au bon moment (choke, grouped enemies), grenade arc pour derrière les covers, positionnement Assault (dos couvert, ligne de retraite), Artillerie precision.",
-    'Cassidy':       "Kit: Peacekeeper (revolver), Magnetic Grenade (tracking), Combat Roll (reload + dodge), Deadeye (ulti charge). Points clés: Magnetic Grenade sur cibles mobiles (Tracer, Genji), Combat Roll cancel pour DPS burst, Deadeye usage sécurisé (jamais en fight ouvert), fan-the-hammer au corps-à-corps uniquement.",
-    'Echo':          "Kit: Tri-shot, Sticky Bombs (AoE), Focusing Beam (execute <50% HP), Glide, Flight, Duplicate (ulti). Points clés: Focusing Beam sur cibles basses HP (ne pas gaspiller sur cible pleine vie), Duplicate sur l'ulti ennemi le plus impactant, Sticky Bombs groupement, mobilité pour angles inattendus.",
-    'Emre':          "Héros récent. Analyser: kit de dégâts, mobilité, cooldowns offensifs, sélection de cibles.",
-    'Freja':         "Héros récent. Analyser: précision, gestion de la distance optimale, usage des cooldowns, impact sur les engagements.",
-    'Genji':         "Kit: Shuriken (3-shot + fan), Deflect (reflect projectiles), Swift Strike (dash + reset on kill), Dragonblade (ulti). Points clés: dash reset management (ne pas utiliser Swift Strike sans kill assuré après), Deflect timing (anti-Ana sleep, anti-Roadhog hook), Dragonblade targets (ne pas blade un Zarya plein énergie), engagement/disengage via wall-climb.",
-    'Hanzo':         "Kit: Storm Bow (charge), Sonic Arrow (reveal), Storm Arrows (rapid-fire), Lunge (double-jump), Dragonstrike (ulti). Points clés: Storm Arrows pour éliminer rapidement une cible ou finir un duel, Sonic Arrow pour intel (point contest, choke), Dragonstrike en combo (après Flash Bang, Graviton, Earthshatter) ou pour zone denial.",
-    'Junkrat':       "Kit: Frag Launcher, Concussion Mine (x2, jump + kill), Steel Trap (CC), RIP-Tire (ulti). Points clés: Concussion Mine mobility (jump sur hauteur), Steel Trap en chokepoint ou sur flanc, arc de tir maîtrisé pour derrière les covers, RIP-Tire routing inattendu (flanc, plafond).",
-    'Mei':           "Kit: Endothermic Blaster (slow + freeze), Ice Wall, Cryo-Freeze (invulnérabilité), Blizzard (ulti). Points clés: Ice Wall usage (split l'équipe ennemie, bloque un ulti, sauve un allié), Blizzard combo (avec Graviton, Earthshatter, Flux), freeze 1v1 pour elim sûre, Cryo-Freeze pour survive et repositionnement.",
-    'Pharah':        "Kit: Rocket Launcher, Jump Jet (vertical), Hover Jets, Concussive Blast (knockback), Barrage (ulti). Points clés: maintenir la hauteur pour réduire les angles ennemis, Concussive Blast pour push ennemis hors cover ou self-knockback, Barrage placement (angle, distance), cibler les hitscans au sol (identifier quand rentrer).",
-    'Reaper':        "Kit: Hellfire Shotguns, Wraith Form (invulnérabilité + repositionnement), Shadow Step (téléport), Death Blossom (ulti). Points clés: flanking pour backline (supports isolés), Wraith Form pour disengage (pas pour engager), Shadow Step préemptif (pas en combat), Death Blossom quand entouré (pas en 1v1).",
-    'Sierra':        "Héros récent. Analyser: kit de dégâts, angles de tir, gestion des ressources, timing des engagements.",
-    'Sojourn':       "Kit: Railgun (auto + charged shot), Power Slide, Disruptor Shot (AoE slow), Overclock (ulti). Points clés: charger le Railgun via les dégâts auto pour one-shot, Power Slide pour angle surprise ou disengage, Disruptor Shot sur clusters pour faciliter les kills, Overclock targets prioritaires (tank plein vie, support critique).",
-    'Soldier: 76':   "Kit: Heavy Pulse Rifle, Sprint, Biotic Field (heal AoE), Helix Rockets, Tactical Visor (ulti). Points clés: Biotic Field placement (soi + alliés proches, pas en solo), Helix Rockets en point-blank pour burst, Tactical Visor targets (commencer par le plus facile à tuer), positionnement mid-range constant.",
-    'Sombra':        "Kit: Machine Pistol, Hack (silence), Stealth (invisibilité), Translocator (beacon), EMP (ulti). Points clés: Hack targets prioritaires (Ana, Zenyatta, Kiriko pour couper les soins), EMP timing (après Zarya bulles dépensées, avant ulti ennemi), Translocator placement sécurisé pour escape, ne jamais engager un tank hacké.",
-    'Symmetra':      "Kit: Photon Projector (beam charge + orbs), Sentry Turrets (x3), Teleporter (ulti A) ou Photon Barrier (ulti B). Points clés: placement des tourelles (derrière coins, hauteur, cluster de 3 pour burst), beam charge maximale en combat corps-à-corps, Teleporter pour repositionnement d'équipe rapide, Barrier pour bloquer un choke ou un ulti.",
-    'Torbjörn':      "Kit: Rivet Gun, Forge Hammer, Deploy Turret, Overload (self-buff), Molten Core (ulti). Points clés: placement turret (hauteur, angle difficile à atteindre, derrière cover), Overload pour survie ou burst, Molten Core en zone contest (choke, point) pour area denial, repositionner la tourelle si inefficace.",
-    'Tracer':        "Kit: Pulse Pistols (hitscan), Blink (x3 charges), Recall (revenir 3s en arrière + heal), Pulse Bomb (ulti colle). Points clés: gestion des Blink charges (ne jamais en utiliser 3 d'affilée sans recall prêt), Recall timing (escape death, pas panique), Pulse Bomb sur tanks ou clusters (coller un Reinhardt ou un Rein/Zarya groupés), flanking sur le support le plus isolé.",
-    'Vendetta':      "Héros récent. Analyser: kit d'assassin, burst damage, mobilité, target prioritization.",
-    'Venture':       "Kit: Smart Excavator (projectiles), Burrow (underground dash), Drill Dash (dash AoE), Tectonic Shock (ulti). Points clés: Burrow pour repositionnement imprévu ou escape, combo Drill Dash + Smart Excavator pour burst, Tectonic Shock sur clusters, playstyle d'assassin en mêlée.",
-    'Widowmaker':    "Kit: Widow's Kiss (sniper + auto), Grappling Hook, Venom Mine, Infra-Sight (ulti). Points clés: angle selection (jamais le même angle deux fois de suite), repositionnement après kill (avant que l'ennemi identifie la position), Grappling Hook pour hauteur ou escape, Infra-Sight timing (avant engage allié, pas gaspillé solo).",
-
-    // ── SUPPORT ──
-    'Ana':           "Kit: Biotic Rifle (heal/damage + sleep), Sleep Dart, Biotic Grenade (anti-heal + boost heal), Nano Boost (ulti). Points clés: Sleep Dart sur les ultis critiques (Dragonblade, Primal Rage, Deadeye), Biotic Grenade timing (anti-heal sur tank plein vie pendant fight, pas sur cible déjà basse), Nano Boost sur le héros avec l'ulti le plus impactant (Genji, Reaper, Soldier).",
-    'Baptiste':      "Kit: Biotic Launcher (heal burst + grenades), Regenerative Burst (self+nearby heal), Immortality Field (empêche les morts), Amplification Matrix (ulti double dégâts/soins). Points clés: Immortality Field placement (derrière cover, pas au milieu), timing (anticiper le burst ennemi, pas réaction), Amplification Matrix axe de tir allié, Regenerative Burst proactif.",
-    'Brigitte':      "Kit: Rocket Flail, Shield Bash (stun), Repair Pack (heal + armure), Rally (ulti armure AoE), Inspire (passive heal AoE sur hit). Points clés: Shield Bash combo sur Tracer/Genji, Repair Pack sur le joueur le plus en danger (pas toujours soi), Rally timing (avant engage ou pour tenir un point), rester proche pour maximiser Inspire.",
-    'Illari':        "Kit: Solar Rifle (heal charged + dégâts), Outburst (dash knockback), Healing Pylon (tourelle de soin), Captive Sun (ulti explosion retardée). Points clés: Healing Pylon placement sécurisé (hauteur, coin, difficile à détruire), Outburst pour disengage ou repositionnement, Captive Sun combo (avec Flash Bang, Sleep Dart, Graviton), precision du rifle pour damage.",
-    'Jetpack Cat':   "Héros récent. Analyser: mobilité du kit, soins proactifs vs réactifs, positionnement en tant que support mobile.",
-    'Juno':          "Kit: Pulsar Torpedoes, Glide Boost (mobilité), Hyper Ring (speed boost allié), Orbital Ray (ulti heal+damage beam). Points clés: Hyper Ring placement pour engage ou disengage d'équipe, Orbital Ray axe optimal (maximum d'alliés + ennemis), Glide Boost pour survivre aux dives, gestion de la distance de soin.",
-    'Kiriko':        "Kit: Healing Ofuda (heal tracking), Kunai (headshot), Swift Step (téléport allié), Protection Suzu (invulnérabilité + cleanse), Kitsune Rush (ulti speed+cooldown). Points clés: Suzu timing (cleanse anti-nade, anti-sleep, anti-hack — anticiper pas réagir), Swift Step target (allié le plus en danger ou le plus loin), Kitsune Rush avant l'engage allié pour maximum impact, Kunai headshots consistency.",
-    'Lifeweaver':    "Kit: Healing Blossom (charge), Thorn Volley, Petal Platform (élévateur), Life Grip (pull allié), Parting Gift (passive à la mort), Tree of Life (ulti). Points clés: Life Grip timing (sauver un allié en danger de mort, pas interrompre son ulti), Petal Platform pour créer des angles, Tree of Life placement (milieu du teamfight, zone contestée), Healing Blossom charge optimale.",
-    'Lúcio':         "Kit: Sonic Amplifier (dégâts + boop), Crossfade (speed/heal switch), Amp It Up (boost), Wall Ride, Sound Barrier (ulti). Points clés: speed vs heal switch (speed pour engage/disengage, heal quand pression forte), boop usage (pousser hors map, interrompre une charge, séparer), Sound Barrier timing (juste avant un ulti ennemi AoE — Graviton+Dragonblade, Barrage), Wall Ride pour survivre.",
-    'Mercy':         "Kit: Caduceus Staff (heal beam 55/s ou damage boost x30%), Caduceus Blaster (pistolet), Guardian Angel (GA dash vers allié), Resurrect (revive), Valkyrie (ulti). Points clés: damage boost vs healing (boost un DPS en position de kill > heal un allié stable), GA mobility (angle, hauteur, disengage), Rez timing (ne jamais rez si 2+ ennemis visent l'endroit), Valkyrie pour chain-rez ou sustain en teamfight.",
-    'Mizuki':        "Héros récent. Analyser: soins proactifs vs réactifs, mobilité, usage des cooldowns, coordination avec le tank.",
-    'Moira':         "Kit: Biotic Grasp (heal drain + orbe), Biotic Orb (orbe heal/damage), Fade (escape + invulnérabilité courte), Coalescence (ulti beam). Points clés: Biotic Orb placement (couloir pour heal passif ou pression dégâts), Fade usage (escape d'une mort certaine, pas de reposition offensif), resource management (équilibre heal/damage pour recharger), Coalescence pour traverse les barrières ou survivre en teamfight.",
-    'Wuyang':        "Héros récent. Analyser: type de soins (burst vs sustained), mobilité, cooldowns défensifs, impact en teamfight.",
-    'Zenyatta':      "Kit: Orb of Harmony (heal passif allié), Orb of Discord (debuff ennemi -30% résistance), Orb Volley, Kick, Transcendence (ulti invulnérabilité+heal AoE). Points clés: Discord orb sur la cible prioritaire (tank le plus agressif ou DPS qui engage), Harmony orb switch rapide sur l'allié qui prend des dégâts, Transcendence timing (contre Graviton+ulti, Coalescence, Barrage), positionnement safe (Zenyatta a zéro mobilité).",
-  };
-
-  const RANK_CONTEXT = {
-    'Bronze':       "Joueur débutant : lacunes sur les mécaniques de base, awareness minimal, décisions hasardeuses. Focalise les conseils sur les fondamentaux : position safe, utiliser les soins, ne pas mourir inutilement.",
-    'Argent':       "Comprend les bases mais manque de régularité. Erreurs d'habitude répétées. Conseils sur la constance et éviter les erreurs récurrentes.",
-    'Or':           "Niveau correct mais mauvaises décisions de positioning et de timing. Commence à avoir de bonnes mécaniques mais mal appliquées.",
-    'Platine':      "Bonnes mécaniques de base, mauvais timing d'ulti et sous-utilisation du kit. Conseils sur le timing et l'impact des cooldowns.",
-    'Diamant':      "Solide mécaniquement, erreurs surtout sur le macro-jeu et la prise de risque. Peut comprendre des conseils plus nuancés.",
-    'Maître':       "Très bon niveau individuel. Erreurs subtiles : resource management, cooldown tracking, lecture des ennemis. Conseils précis et techniques.",
-    'Grand Maître': "Quasi-optimal. Analyser les micro-décisions, l'adaptation aux matchups, la gestion du tempo. Sois très précis.",
-    'Champion':     "Niveau élite. Identifier uniquement les erreurs les plus subtiles sur la position exacte, le timing, la lecture des ultis ennemis.",
-    'Top 500':      "Niveau professionnel. Uniquement les erreurs les plus fines et les optimisations de haut niveau.",
-  };
-
-function buildPrompt(hero, rank) {
-    return `Tu es l'unité tactique "ARCHITECTE OW", coach Top 500. Analyse cette VOD de ${hero} au rang ${rank}.
-
-STRICTE DISCIPLINE VISUELLE (ANTI-HALLUCINATION) :
-1. ANALYSE DU TAB : Au début de la vidéo, identifie précisément les 5 héros ennemis. NE PARLE JAMAIS d'un héros qui n'est pas présent dans la partie (ex: ne parle pas de Zenyatta s'il n'est pas là).
-2. VÉRIFICATION DU KILL FEED : Avant de noter une mort ou un kill, vérifie le journal en haut à droite.
-3. LECTURE DU HUD : Regarde tes propres cooldowns en bas à droite pour confirmer si une capacité était réellement disponible ou non.
-
-CADRE D'ANALYSE :
-- FOCUS MÉCANIQUE : Analyse l'utilisation du kit de ${hero} (timing, précision, gestion des ressources).
-- POSITIONNEMENT : Analyse les angles de tir et l'utilisation des couvertures naturelles.
-- ERREURS DE RANG : Adapte la sévérité au niveau ${rank}.
-
-RÉPONDS UNIQUEMENT EN JSON VALIDE :
-{
-  "summary": "Diagnostic global honnête basé uniquement sur ce qui est visible.",
-  "timestamps": [
-    {
-      "time": "MM:SS",
-      "category": "death|mistake|positioning|ulti|good",
-      "title": "[ACTION] - Verdict",
-      "description": "Analyse technique REELLEMENT visible à l'écran. Si rien de spécial ne se passe à ce timing, ne crée pas d'entrée bidon."
-    }
-  ],
-  "priorities": [
-    "Priorité 1 basée sur une erreur répétée dans la vidéo.",
-    "Priorité 2",
-    "Priorité 3"
-  ]
-}
-
-IMPORTANT : Ne dépasse pas 6 à 8 moments si la vidéo est courte. Mieux vaut 4 moments vrais que 10 moments inventés. Sois froid et factuel.`;
-  }
-
-Identifie 8 à 12 moments clés significatifs. Priorise les moments où le kit est mal utilisé.`;
-  }
-
-  async function generateAnalysis(apiKey, fileUri, fileMime, hero, rank) {
-    setProgress(75, 'Analyse IA en cours…');
-
-    const prompt = buildPrompt(hero, rank);
-
-    const res = await fetch(
-      `${BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { file_data: { file_uri: fileUri, mime_type: fileMime } },
-              { text: prompt },
-            ],
-          }],
-        }),
+    document.getElementById('videoFile').onchange = (e) => {
+      selectedFile = e.target.files[0];
+      if(selectedFile) {
+        document.getElementById('fileStatus').textContent = "Fichier prêt : " + selectedFile.name;
+        document.getElementById('fileStatus').style.color = "var(--green)";
       }
-    );
+      checkReady();
+    };
 
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
+    document.getElementById('apiKey').oninput = checkReady;
 
-    const raw = data.candidates[0].content.parts[0].text
-      .replace(/```json|```/g, '').trim();
-    return JSON.parse(raw);
-  }
-
-  async function deleteFile(apiKey, fileName) {
-    try {
-      await fetch(`${BASE}/v1beta/${fileName}?key=${apiKey}`, { method: 'DELETE' });
-    } catch {}
-  }
-
-  /* ─────────────────────────────────────────
-     ANALYZE — action principale
-  ───────────────────────────────────────── */
-
-  async function analyze() {
-    hideError();
-
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const hero   = document.getElementById('heroSelect').value;
-    const rank   = document.getElementById('rankSelect').value;
-
-    if (!apiKey)       return showError('Entre ta clé API Gemini.');
-    if (!selectedFile) return showError('Sélectionne une VOD.');
-
-    const btn = document.getElementById('analyzeBtn');
-    btn.disabled = true;
-    showProgress();
-    hideResults();
-
-    let uploadedFileName = null;
-
-    try {
-      setProgress(10, 'Connexion à Gemini…');
-
-      const fileInfo = await uploadToGemini(apiKey, selectedFile);
-      uploadedFileName = fileInfo.name;
-
-      const activeFile = await waitForActive(apiKey, fileInfo.name);
-      const parsed = await generateAnalysis(apiKey, activeFile.uri, selectedFile.type, hero, rank);
-
-      setProgress(100, 'Analyse terminée !');
-      renderResults(parsed);
-
-    } catch (err) {
-      showError('Erreur : ' + err.message);
-      hideProgress();
-    } finally {
-      btn.disabled = false;
-      if (uploadedFileName) deleteFile(apiKey, uploadedFileName);
+    function checkReady() {
+      const key = document.getElementById('apiKey').value;
+      document.getElementById('analyzeBtn').disabled = !(key && selectedFile);
     }
-  }
 
-  /* ─────────────────────────────────────────
-     RENDER RESULTS
-  ───────────────────────────────────────── */
+    // PROMPT EQUILIBRÉ : Précis mais évite les inventions
+    function buildPrompt(hero, rank) {
+      return `Tu es ARCHITECTE OW, un coach professionnel. Analyse cette VOD de ${hero} (${rank}).
+      
+      CONSIGNES DE SÉCURITÉ :
+      1. Ne parle QUE de ce que tu vois. Si un héros n'est pas dans le match, ne le mentionne pas.
+      2. Vérifie le HUD (cooldowns en bas à droite) avant de critiquer une action.
+      3. Limite-toi à 5 ou 6 moments clés VRAIMENT importants.
+      
+      FORMAT JSON STRICT :
+      {
+        "summary": "Résumé de la performance.",
+        "timestamps": [{"time":"MM:SS", "category":"death|mistake|good", "title":"Titre", "description":"Analyse factuelle"}],
+        "priorities": ["Action 1", "Action 2", "Action 3"]
+      }`;
+    }
 
-  function renderResults(data) {
-    document.getElementById('summaryText').textContent = data.summary || '';
-    renderTimestamps(data.timestamps || []);
-    renderPriorities(data.priorities || []);
-    hideProgress();
-    showResults();
-  }
+    document.getElementById('analyzeBtn').onclick = async () => {
+      const key = document.getElementById('apiKey').value;
+      const hero = document.getElementById('heroSelect').value;
+      const rank = document.getElementById('rankSelect').value;
 
-  function renderTimestamps(timestamps) {
-    document.getElementById('timestampList').innerHTML = timestamps.map((ts, i) => {
-      const cat = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
-      return `
-        <div class="ts-item">
-          <div class="ts-head" onclick="toggleTimestamp(${i})">
-            <div class="ts-time">${ts.time}</div>
-            <div class="ts-category ${cat.cssClass}">${cat.label}</div>
-            <div class="ts-title">${ts.title}</div>
-            <div class="ts-chevron" id="chev-${i}">▼</div>
-          </div>
-          <div class="ts-body" id="body-${i}">${ts.description}</div>
-        </div>`;
-    }).join('');
-  }
+      document.getElementById('setupSection').style.display = 'none';
+      document.getElementById('progressSection').style.display = 'block';
 
-  function renderPriorities(priorities) {
-    document.getElementById('priorityList').innerHTML = priorities.map((text, i) => `
-      <div class="priority-item">
-        <div class="priority-num">${i + 1}.</div>
-        <div class="priority-text">${text}</div>
-      </div>`).join('');
-  }
+      try {
+        const genAI = new GoogleGenerativeAI(key);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  function toggleTimestamp(index) {
-    const body    = document.getElementById(`body-${index}`);
-    const chevron = document.getElementById(`chev-${index}`);
-    chevron.textContent = body.classList.toggle('open') ? '▲' : '▼';
-  }
+        const reader = new FileReader();
+        reader.readAsDataURL(selectedFile);
+        reader.onload = async () => {
+          const base64Data = reader.result.split(',')[1];
+          const result = await model.generateContent([
+            { inlineData: { data: base64Data, mimeType: selectedFile.type } },
+            { text: buildPrompt(hero, rank) }
+          ]);
 
-</script>
+          const rawText = result.response.text();
+          const cleanJson = rawText.replace(/```json|```/g, "").trim();
+          const data = JSON.parse(cleanJson);
+
+          document.getElementById('summaryText').textContent = data.summary;
+          document.getElementById('timestampList').innerHTML = data.timestamps.map((ts, i) => `
+            <div class="ts-item">
+              <div class="ts-head" onclick="const b=document.getElementById('b-${i}'); b.style.display=b.style.display==='block'?'none':'block'">
+                <div class="ts-time">${ts.time}</div>
+                <div class="ts-category ${(CATEGORIES[ts.category] || CATEGORIES.mistake).cssClass}">${(CATEGORIES[ts.category] || CATEGORIES.mistake).label}</div>
+                <div class="ts-title">${ts.title}</div>
+              </div>
+              <div class="ts-body" id="b-${i}">${ts.description}</div>
+            </div>`).join('');
+          
+          document.getElementById('priorityList').innerHTML = data.priorities.map(p => `<div class="priority-item">${p}</div>`).join('');
+          
+          document.getElementById('progressSection').style.display = 'none';
+          document.getElementById('resultsSection').style.display = 'block';
+        };
+      } catch (err) {
+        alert("Erreur d'analyse. Vérifiez votre clé API ou le format du fichier.");
+        location.reload();
+      }
+    };
+  </script>
 </body>
 </html>
