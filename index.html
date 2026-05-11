@@ -643,55 +643,33 @@
     'Top 500':      "Niveau professionnel. Uniquement les erreurs les plus fines et les optimisations de haut niveau.",
   };
 
-  function buildPrompt(hero, rank) {
-    const heroTips = HERO_CONTEXT[hero]
-      || `Héros ${hero}. Analyse l'utilisation de son kit (cooldowns, ressources, positionnement) et son impact sur le teamfight.`;
-    const rankTips = RANK_CONTEXT[rank]
-      || `Adapte la profondeur de l'analyse au niveau ${rank}.`;
+function buildPrompt(hero, rank) {
+    return `Tu es "ARCHITECTE OW", coach Top 500. Analyse chirurgicale de VOD pour le héros ${hero} au rang ${rank}.
+Tu possèdes la data complète des 51 personnages, leurs capacités, combos (ex: Hook-Shotgun, Dash-Melee) et synergies.
 
-    return `Tu es un coach Overwatch 2 professionnel et expert du héros ${hero}.
+TON ANALYSE DOIT PORTER SUR :
+1. HUD & MECANIQUES : Cooldowns (bas à droite), HP (bas à gauche). Note le gaspillage de sorts et la précision des combos.
+2. POSITIONNEMENT : Utilisation des angles, du High Ground et de la ligne de vue (LoS) des soigneurs.
+3. MACRO & ECONOMIE : Kill feed awareness, gestion des Ultimates (Over-ulting), et timing d'engagement.
 
-CONTEXTE DU JOUEUR :
-- Héros joué : ${hero}
-- Rang : ${rank}
-- Profil rang : ${rankTips}
-
-CONNAISSANCE DU KIT DE ${hero.toUpperCase()} :
-${heroTips}
-
-MISSION : Analyse cette VOD et fournis un coaching précis, technique et actionnable sur l'utilisation du kit de ${hero}.
-
-RÈGLES D'ANALYSE :
-1. Chaque timestamp doit mentionner LE cooldown ou LA ressource spécifique impliqué(e) (ex: "Blink #3 gaspillé", "Recall pas utilisé", "Discord orb sur mauvaise cible")
-2. Explique POURQUOI c'est une erreur ou un bon play (conséquence concrète sur le fight)
-3. Donne un conseil ACTIONNABLE applicable dès la prochaine partie
-4. Adapte la profondeur au rang ${rank} — ${rankTips}
-5. Pour les "good" moments : explique ce qui était bien et comment reproduire systématiquement
-
-CATÉGORIES (utilise exactement ces valeurs) :
-- death : mort évitable liée à un mauvais usage du kit ou un positioning hors-kit
-- mistake : erreur de kit sans mort (cooldown mal timé, mauvaise cible, ressource gaspillée)
-- positioning : placement ou angle sous-optimal pour ce héros spécifiquement
-- ulti : gestion d'ulti (bon ou mauvais timing, mauvaise cible, combo raté ou réussi)
-- good : moment à reproduire — technique correcte ou décision optimale
-
-Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
+RÉPONDS UNIQUEMENT EN JSON VALIDE :
 {
-  "summary": "Bilan global de 4-5 phrases : niveau général sur ${hero}, points forts du kit utilisés, axes d'amélioration prioritaires sur le kit",
+  "summary": "Diagnostic global du niveau et du win-rate conditionnel.",
   "timestamps": [
     {
       "time": "MM:SS",
       "category": "death|mistake|positioning|ulti|good",
-      "title": "Titre court mentionnant le cooldown/ressource impliqué",
-      "description": "Ce qui s'est passé avec quel cooldown/ressource, pourquoi c'est bien/mal, conseil concret et spécifique à ${hero}"
+      "title": "[ACTION] - Verdict",
+      "description": "Analyse technique : pourquoi c'est bien/mal, conséquence, et correctif précis."
     }
   ],
   "priorities": [
-    "Point kit #1 le plus important à améliorer sur ${hero} avec conseil concret",
-    "Point kit #2 avec conseil concret",
-    "Point kit #3 avec conseil concret"
+    "Priorité 1 : Le plus gros défaut qui bloque le rank up.",
+    "Priorité 2 : Conseil mécanique spécifique sur ${hero}.",
+    "Priorité 3 : Vision de jeu / Placement."
   ]
-}
+}`;
+  }
 
 Identifie 8 à 12 moments clés significatifs. Priorise les moments où le kit est mal utilisé.`;
   }
