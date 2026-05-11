@@ -389,29 +389,45 @@
     });
   }
 
-  // Héros chargés depuis heroes.json via le serveur
-  // Pour ajouter un héros : modifier heroes.json uniquement
-  async function initHeroes() {
-    const heroSel = document.getElementById('heroSelect');
-    try {
-      const res    = await fetch(SERVER_URL + '/heroes');
-      const heroes = await res.json(); // { Tank: [...], Damage: [...], Support: [...] }
+  // Fallback si le serveur est endormi (Render free tier)
+  // Source de vérité : heroes.json sur le serveur
+  const HEROES_FALLBACK = {
+    Tank:    ['D.Va','Domina','Doomfist','Hazard','Junker Queen','Mauga','Orisa','Ramattra','Reinhardt','Roadhog','Sigma','Winston','Wrecking Ball','Zarya'],
+    Damage:  ['Anran','Ashe','Bastion','Cassidy','Echo','Emre','Freja','Genji','Hanzo','Junkrat','Mei','Pharah','Reaper','Sierra','Sojourn','Soldier: 76','Sombra','Symmetra','Torbjörn','Tracer','Vendetta','Venture','Widowmaker'],
+    Support: ['Ana','Baptiste','Brigitte','Illari','Jetpack Cat','Juno','Kiriko','Lifeweaver','Lúcio','Mercy','Mizuki','Moira','Wuyang','Zenyatta'],
+  };
 
-      Object.entries(heroes).forEach(([role, list]) => {
-        const group = document.createElement('optgroup');
-        group.label = ROLE_LABELS[role] || role;
-        [...list]
-          .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
-          .forEach(h => {
-            const o = document.createElement('option');
-            o.value = h; o.textContent = h;
-            if (h === DEFAULT_HERO) o.selected = true;
-            group.appendChild(o);
-          });
-        heroSel.appendChild(group);
-      });
+  function populateHeroSelect(heroes) {
+    const heroSel = document.getElementById('heroSelect');
+    heroSel.innerHTML = ''; // reset
+    Object.entries(heroes).forEach(([role, list]) => {
+      const group = document.createElement('optgroup');
+      group.label = ROLE_LABELS[role] || role;
+      [...list]
+        .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
+        .forEach(h => {
+          const o = document.createElement('option');
+          o.value = h; o.textContent = h;
+          if (h === DEFAULT_HERO) o.selected = true;
+          group.appendChild(o);
+        });
+      heroSel.appendChild(group);
+    });
+  }
+
+  async function initHeroes() {
+    // Afficher le fallback immédiatement pour ne pas bloquer l'utilisateur
+    populateHeroSelect(HEROES_FALLBACK);
+    // Puis essayer de charger depuis le serveur (plus à jour)
+    try {
+      const res    = await fetch(SERVER_URL + '/heroes', { signal: AbortSignal.timeout(5000) });
+      const heroes = await res.json();
+      if (heroes && typeof heroes === 'object' && !Array.isArray(heroes)) {
+        populateHeroSelect(heroes); // màj avec la version serveur
+      }
     } catch (e) {
-      console.error('Impossible de charger les héros :', e);
+      // Serveur endormi ou offline — le fallback est déjà affiché, ça marche quand même
+      console.warn('Héros chargés depuis le fallback local (serveur non disponible)');
     }
   }
 
