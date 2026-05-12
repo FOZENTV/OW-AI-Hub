@@ -194,80 +194,83 @@ app.get("/heroes", (req, res) => res.json(HEROES_FLAT));
 
 app.post("/analyze", upload.single("video"), async (req, res) => {
   const apiKey    = (req.body?.api_key    || "").trim();
-  const hero      = req.body?.hero       || "Tracer";
-  const rank      = req.body?.rank       || "Diamant";
+  const hero      = req.body?.hero        || "Tracer";
+  const rank      = req.body?.rank        || "Diamant";
   const enemyComp = (req.body?.enemy_comp || "").trim();
   const video     = req.file;
 
-  console.log(`[ANALYZE] hero=${hero} rank=${rank} fichier=${video?.originalname} apiKey=${!!apiKey}`);
+  console.log(`[ANALYZE] hero=${hero} rank=${rank} fichier=${video?.originalname}`);
 
   if (!apiKey) return res.status(400).json({ error: "Clé API manquante" });
   if (!video)  return res.status(400).json({ error: "Vidéo manquante" });
 
-  const tmpPath    = video.path;
-  let   toUpload   = tmpPath;
-  let   compressed = false;
+  const tmpPath  = video.path;
+  const frameDir = tmpPath + "_frames";
 
   try {
-    const ai     = new GoogleGenAI({ apiKey });
-    const sizeMb = fs.statSync(tmpPath).size / 1024 / 1024;
-    console.log(`[*] Taille reçue : ${sizeMb.toFixed(1)} Mo`);
+    const ai = new GoogleGenAI({ apiKey });
 
-    // ── Compression si > 380 Mo ──────────
-    if (sizeMb > MAX_MB_GEMINI) {
-      const compressedPath = tmpPath + "_compressed.mp4";
-      console.log(`[*] Compression FFmpeg (${sizeMb.toFixed(0)} Mo → cible <380 Mo)…`);
-      try {
-        await compress(tmpPath, compressedPath);
-        const newSize = fs.statSync(compressedPath).size / 1024 / 1024;
-        console.log(`[*] Après compression : ${newSize.toFixed(1)} Mo`);
-        toUpload   = compressedPath;
-        compressed = true;
-      } catch (ffmpegErr) {
-        console.warn(`[!] FFmpeg indisponible, on tente quand même : ${ffmpegErr.message}`);
-      }
-    }
+    // ── Étape 1 : extraire 1 frame/seconde avec FFmpeg ──
+    fs.mkdirSync(frameDir, { recursive: true });
+    console.log(`[*] Extraction des frames…`);
 
-    // ── Upload via path (le SDK lit la taille automatiquement) ──
-    console.log(`[*] Upload vers Gemini (${(fs.statSync(toUpload).size/1024/1024).toFixed(1)} Mo)…`);
-    const uploaded = await ai.files.upload({
-      file:   toUpload,
-      config: {
-        mimeType:    video.mimetype || "video/mp4",
-        displayName: video.originalname || "vod.mp4",
-      },
+    await new Promise((resolve, reject) => {
+      execFile("ffmpeg", [
+        "-i", tmpPath,
+        "-vf", "fps=1,scale=1280:-2",   // 1 frame/sec, max 720p
+        "-q:v", "3",                     // qualité JPEG (1=best, 31=worst)
+        "-f", "image2",
+        path.join(frameDir, "frame_%04d.jpg"),
+        "-y",
+      ], (err, stdout, stderr) => {
+        if (err) reject(new Error("FFmpeg frames échoué : " + stderr.slice(-300)));
+        else resolve();
+      });
     });
-    console.log(`[*] Fichier uploadé : ${uploaded.name}`);
 
-    // Attendre ACTIVE
-    let fileReady = false;
-    for (let i = 0; i < POLL_MAX; i++) {
-      const f = await ai.files.get({ name: uploaded.name });
-      console.log(`[*] État : ${f.state}`);
-      if (f.state === "ACTIVE") { fileReady = true; break; }
-      if (f.state === "FAILED") return res.status(500).json({ error: "Traitement vidéo échoué" });
-      await new Promise(r => setTimeout(r, POLL_MS));
+    // ── Étape 2 : lire toutes les frames ──
+    const frameFiles = fs.readdirSync(frameDir)
+      .filter(f => f.endsWith(".jpg"))
+      .sort();
+
+    console.log(`[*] ${frameFiles.length} frames extraites`);
+
+    if (frameFiles.length === 0)
+      return res.status(500).json({ error: "Aucune frame extraite" });
+
+    // ── Étape 3 : construire les parts Gemini ──
+    // Chaque frame = 1 image inline + son timestamp en texte
+    const parts = [];
+
+    for (let i = 0; i < frameFiles.length; i++) {
+      const sec     = i + 1;
+      const mm      = String(Math.floor(sec / 60)).padStart(2, "0");
+      const ss      = String(sec % 60).padStart(2, "0");
+      const ts      = `${mm}:${ss}`;
+      const imgPath = path.join(frameDir, frameFiles[i]);
+      const imgData = fs.readFileSync(imgPath).toString("base64");
+
+      parts.push({ text: `[${ts}]` });
+      parts.push({
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: imgData,
+        },
+      });
     }
 
-    if (!fileReady) return res.status(500).json({ error: "Timeout Gemini" });
+    // Prompt en dernier
+    parts.push({ text: buildPrompt(hero, rank, enemyComp) });
 
-    // Analyse
-    console.log("[*] Génération…");
+    // ── Étape 4 : appel Gemini ──
+    console.log(`[*] Envoi à Gemini (${frameFiles.length} frames)…`);
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
-      contents: [{
-        role: "user",
-        parts: [
-          { fileData: { fileUri: uploaded.uri, mimeType: video.mimetype || "video/mp4" } },
-          { text: buildPrompt(hero, rank, enemyComp) },
-        ],
-      }],
+      contents: [{ role: "user", parts }],
     });
 
     const raw    = response.text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(raw);
-
-    try { await ai.files.delete({ name: uploaded.name }); } catch {}
 
     console.log("[✓] Terminé");
     return res.json(parsed);
@@ -278,8 +281,10 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
       return res.status(500).json({ error: "JSON Gemini invalide, réessaie" });
     return res.status(500).json({ error: err.message });
   } finally {
+    // Nettoyage
     fs.unlink(tmpPath, () => {});
-    if (compressed) fs.unlink(toUpload, () => {});
+    if (fs.existsSync(frameDir))
+      fs.rmSync(frameDir, { recursive: true, force: true });
   }
 });
 
