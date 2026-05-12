@@ -179,23 +179,39 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
   if (!apiKey) return res.status(400).json({ error: "Clé API manquante" });
   if (!video)  return res.status(400).json({ error: "Vidéo manquante" });
 
-  const tmpPath = video.path;
+  const tmpPath    = video.path;
+  let   toUpload   = tmpPath;
+  let   compressed = false;
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    const sizeMb = (video.size / 1024 / 1024).toFixed(1);
-    console.log(`[*] Upload vers Gemini (${sizeMb} Mo)…`);
+    const ai     = new GoogleGenAI({ apiKey });
+    const sizeMb = fs.statSync(tmpPath).size / 1024 / 1024;
+    console.log(`[*] Taille reçue : ${sizeMb.toFixed(1)} Mo`);
 
-    // Upload depuis le fichier temporaire sur disque
-    const fileStream = fs.createReadStream(tmpPath);
+    // ── Compression si > 380 Mo ──────────
+    if (sizeMb > MAX_MB_GEMINI) {
+      const compressedPath = tmpPath + "_compressed.mp4";
+      console.log(`[*] Compression FFmpeg (${sizeMb.toFixed(0)} Mo → cible <380 Mo)…`);
+      try {
+        await compress(tmpPath, compressedPath);
+        const newSize = fs.statSync(compressedPath).size / 1024 / 1024;
+        console.log(`[*] Après compression : ${newSize.toFixed(1)} Mo`);
+        toUpload   = compressedPath;
+        compressed = true;
+      } catch (ffmpegErr) {
+        console.warn(`[!] FFmpeg indisponible, on tente quand même : ${ffmpegErr.message}`);
+      }
+    }
+
+    // ── Upload via path (le SDK lit la taille automatiquement) ──
+    console.log(`[*] Upload vers Gemini (${(fs.statSync(toUpload).size/1024/1024).toFixed(1)} Mo)…`);
     const uploaded = await ai.files.upload({
-      file: fileStream,
+      file:   toUpload,
       config: {
-        mimeType: video.mimetype || "video/mp4",
-        displayName: video.originalname,
+        mimeType:    video.mimetype || "video/mp4",
+        displayName: video.originalname || "vod.mp4",
       },
     });
-
     console.log(`[*] Fichier uploadé : ${uploaded.name}`);
 
     // Attendre ACTIVE
@@ -237,8 +253,8 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
       return res.status(500).json({ error: "JSON Gemini invalide, réessaie" });
     return res.status(500).json({ error: err.message });
   } finally {
-    // Toujours supprimer le fichier temporaire
     fs.unlink(tmpPath, () => {});
+    if (compressed) fs.unlink(toUpload, () => {});
   }
 });
 
