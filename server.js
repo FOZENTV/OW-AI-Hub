@@ -16,7 +16,7 @@ const { GoogleGenAI } = require("@google/genai");
 // ─────────────────────────────────────────
 
 const PORT          = process.env.PORT || 5000;
-const GEMINI_MODEL  = "gemini-3-flash-preview";
+const GEMINI_MODEL  = "gemini-2.5-flash";
 const POLL_MS       = 3000;
 const POLL_MAX      = 30;
 const MAX_MB_GEMINI = 380;
