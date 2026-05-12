@@ -288,6 +288,24 @@
     .ts-chevron { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
     .ts-body { padding: 12px 16px; font-size: 13px; line-height: 1.7; color: var(--text2); border-top: 1px solid var(--border); display: none; }
     .ts-body.open { display: block; }
+    .ts-screenshot {
+      margin-bottom: 10px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .ts-screenshot img {
+      width: 100%;
+      display: block;
+      max-height: 240px;
+      object-fit: cover;
+    }
+    .ts-desc { font-size: 13px; line-height: 1.7; color: var(--text2); }
+    .ts-time-link {
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .ts-time-link:hover { color: #fff; }
 
     /* ── Priorities ── */
     .priorities-card {
@@ -727,18 +745,43 @@ Identifie 8 à 12 moments clés significatifs. Priorise les moments où le kit e
     showResults();
   }
 
+  function jumpToTime(timeStr) {
+    const player = document.getElementById('videoPlayer');
+    if (!player || !player.src) return;
+    const clean = timeStr.replace('~', '');
+    const [mm, ss] = clean.split(':').map(Number);
+    if (isNaN(mm) || isNaN(ss)) return;
+    player.currentTime = mm * 60 + ss;
+    player.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    player.play().catch(() => {});
+  }
+
   function renderTimestamps(timestamps) {
     document.getElementById('timestampList').innerHTML = timestamps.map((ts, i) => {
-      const cat = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
+      const cat      = CATEGORIES[ts.category] || { label: ts.category, cssClass: 'cat-ulti' };
+      const frameUrl = ts.sessionId && ts.frame
+        ? `${SERVER_URL}/frames/${ts.sessionId}/${ts.frame}`
+        : null;
+
+      const screenshot = frameUrl ? `
+        <div class="ts-screenshot">
+          <img src="${frameUrl}" alt="${ts.time}" loading="lazy"
+               onerror="this.parentElement.style.display='none'">
+        </div>` : '';
+
       return `
         <div class="ts-item">
           <div class="ts-head" onclick="toggleTimestamp(${i})">
-            <div class="ts-time">${ts.time}</div>
+            <div class="ts-time ts-time-link" onclick="event.stopPropagation(); jumpToTime('${ts.time}')"
+                 title="Aller à ce moment">${ts.time} ▶</div>
             <div class="ts-category ${cat.cssClass}">${cat.label}</div>
             <div class="ts-title">${ts.title}</div>
             <div class="ts-chevron" id="chev-${i}">▼</div>
           </div>
-          <div class="ts-body" id="body-${i}">${ts.description}</div>
+          <div class="ts-body" id="body-${i}">
+            ${screenshot}
+            <div class="ts-desc">${ts.description}</div>
+          </div>
         </div>`;
     }).join('');
   }
