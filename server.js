@@ -8,16 +8,41 @@ const cors     = require("cors");
 const path     = require("path");
 const fs       = require("fs");
 const os       = require("os");
+const { execFile } = require("child_process");
 const { GoogleGenAI } = require("@google/genai");
 
 // ─────────────────────────────────────────
 //  CONFIG
 // ─────────────────────────────────────────
 
-const PORT         = process.env.PORT || 5000;
-const GEMINI_MODEL = "gemini-2.5-flash";
-const POLL_MS      = 3000;
-const POLL_MAX     = 30;
+const PORT          = process.env.PORT || 5000;
+const GEMINI_MODEL  = "gemini-3-flash-preview";
+const POLL_MS       = 3000;
+const POLL_MAX      = 30;
+const MAX_MB_GEMINI = 380;
+
+// ─────────────────────────────────────────
+//  COMPRESSION FFMPEG
+// ─────────────────────────────────────────
+
+function compress(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    execFile("ffmpeg", [
+      "-i", inputPath,
+      "-vf", "scale=1280:-2",
+      "-c:v", "libx264",
+      "-crf", "28",
+      "-preset", "fast",
+      "-c:a", "aac",
+      "-b:a", "96k",
+      "-movflags", "+faststart",
+      "-y", outputPath,
+    ], (err, stdout, stderr) => {
+      if (err) reject(new Error("FFmpeg échoué : " + stderr));
+      else resolve();
+    });
+  });
+}
 
 // ─────────────────────────────────────────
 //  HEROES
