@@ -188,6 +188,33 @@ app.use(express.static(__dirname));
 app.get("/ping", (req, res) => res.json({ ok: true }));
 app.get("/heroes", (req, res) => res.json(HEROES_FLAT));
 
+// Sessions de frames en mémoire (nettoyées après 30 min)
+const frameSessions = new Map();
+
+function scheduleCleanup(sessionId, frameDir) {
+  setTimeout(() => {
+    try {
+      if (fs.existsSync(frameDir)) fs.rmSync(frameDir, { recursive: true, force: true });
+      frameSessions.delete(sessionId);
+      console.log(`[*] Session ${sessionId} nettoyée`);
+    } catch {}
+  }, 30 * 60 * 1000); // 30 min
+}
+
+// ─────────────────────────────────────────
+//  ROUTE FRAMES
+// ─────────────────────────────────────────
+
+app.get("/frames/:sessionId/:frame", (req, res) => {
+  const { sessionId, frame } = req.params;
+  const sessionDir = frameSessions.get(sessionId);
+  if (!sessionDir) return res.status(404).json({ error: "Session expirée" });
+  const filePath = path.join(sessionDir, frame);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: "Frame introuvable" });
+  res.setHeader("Cache-Control", "public, max-age=1800");
+  res.sendFile(filePath);
+});
+
 // ─────────────────────────────────────────
 //  ANALYZE
 // ─────────────────────────────────────────
@@ -204,21 +231,22 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
   if (!apiKey) return res.status(400).json({ error: "Clé API manquante" });
   if (!video)  return res.status(400).json({ error: "Vidéo manquante" });
 
-  const tmpPath  = video.path;
-  const frameDir = tmpPath + "_frames";
+  const sessionId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const tmpPath   = video.path;
+  const frameDir  = path.join(os.tmpdir(), `ow_frames_${sessionId}`);
 
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    // ── Étape 1 : extraire 1 frame/seconde avec FFmpeg ──
+    // ── Étape 1 : extraire 1 frame/seconde ──
     fs.mkdirSync(frameDir, { recursive: true });
     console.log(`[*] Extraction des frames…`);
 
     await new Promise((resolve, reject) => {
       execFile("ffmpeg", [
         "-i", tmpPath,
-        "-vf", "fps=1,scale=1280:-2",   // 1 frame/sec, max 720p
-        "-q:v", "3",                     // qualité JPEG (1=best, 31=worst)
+        "-vf", "fps=1,scale=1280:-2",
+        "-q:v", "3",
         "-f", "image2",
         path.join(frameDir, "frame_%04d.jpg"),
         "-y",
@@ -234,32 +262,27 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
       .sort();
 
     console.log(`[*] ${frameFiles.length} frames extraites`);
-
     if (frameFiles.length === 0)
       return res.status(500).json({ error: "Aucune frame extraite" });
 
+    // Enregistrer la session pour servir les frames
+    frameSessions.set(sessionId, frameDir);
+    scheduleCleanup(sessionId, frameDir);
+
     // ── Étape 3 : construire les parts Gemini ──
-    // Chaque frame = 1 image inline + son timestamp en texte
     const parts = [];
 
     for (let i = 0; i < frameFiles.length; i++) {
       const sec     = i + 1;
       const mm      = String(Math.floor(sec / 60)).padStart(2, "0");
       const ss      = String(sec % 60).padStart(2, "0");
-      const ts      = `${mm}:${ss}`;
       const imgPath = path.join(frameDir, frameFiles[i]);
       const imgData = fs.readFileSync(imgPath).toString("base64");
 
-      parts.push({ text: `[${ts}]` });
-      parts.push({
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: imgData,
-        },
-      });
+      parts.push({ text: `[${mm}:${ss}] frame_${String(sec).padStart(4,"0")}.jpg` });
+      parts.push({ inlineData: { mimeType: "image/jpeg", data: imgData } });
     }
 
-    // Prompt en dernier
     parts.push({ text: buildPrompt(hero, rank, enemyComp) });
 
     // ── Étape 4 : appel Gemini ──
@@ -272,6 +295,17 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
     const raw    = response.text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(raw);
 
+    // Injecter sessionId dans chaque timestamp
+    if (parsed.timestamps) {
+      parsed.timestamps = parsed.timestamps.map(ts => {
+        // Convertir MM:SS en numéro de frame
+        const [mm, ss] = (ts.time || "00:00").replace("~","").split(":").map(Number);
+        const frameNum = String((mm * 60) + ss).padStart(4, "0");
+        return { ...ts, sessionId, frame: `frame_${frameNum}.jpg` };
+      });
+    }
+    parsed.sessionId = sessionId;
+
     console.log("[✓] Terminé");
     return res.json(parsed);
 
@@ -281,10 +315,8 @@ app.post("/analyze", upload.single("video"), async (req, res) => {
       return res.status(500).json({ error: "JSON Gemini invalide, réessaie" });
     return res.status(500).json({ error: err.message });
   } finally {
-    // Nettoyage
     fs.unlink(tmpPath, () => {});
-    if (fs.existsSync(frameDir))
-      fs.rmSync(frameDir, { recursive: true, force: true });
+    // frameDir gardé pour la session — nettoyé par scheduleCleanup
   }
 });
 
